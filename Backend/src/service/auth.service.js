@@ -2,10 +2,11 @@ import argon2 from "argon2";
 import { findUserByEmail } from "../repository/user.repository.js";
 
 export async function authenticateUser(email, password) {
-  const user = await findUserByEmail(email);
+  const normalizedEmail = email.trim().toLowerCase();
+  const user = await findUserByEmail(normalizedEmail);
   if (!user) {
-    const err = new Error("no user found with this email");
-    err.status = 404;
+    const err = new Error("Invalid email or password");
+    err.status = 401;
     throw err;
   }
 

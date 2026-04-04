@@ -15,6 +15,11 @@ export async function getAllOrders() {
   return result.rows;
 }
 
+export async function getOrderById(id) {
+  const result = await pool.query(Q.GET_ORDER_BY_ID, [id]);
+  return result.rows[0];
+}
+
 export async function updateOrderStatus(status, id) {
   const result = await pool.query(Q.UPDATE_ORDER_STATUS, [status, id]);
   return result.rows[0];

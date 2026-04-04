@@ -3,7 +3,8 @@ import * as repo from "../repository/floor.repository.js";
 // CREATE
 export async function createFloor(req, res, next) {
   try {
-    const { restaurant_id, name } = req.body;
+    const { name } = req.body;
+    const restaurant_id = req.user.restaurant_id;
     const floor = await repo.createFloor(restaurant_id, name);
     res.status(201).json(floor);
   } catch (error) {

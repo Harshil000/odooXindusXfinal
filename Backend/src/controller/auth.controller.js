@@ -16,10 +16,10 @@ export async function registerController(req, res, next) {
 }
 
 export async function loginController(req, res, next) {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
-    try {
-        const user = await authenticateUser(email, password);
+  try {
+    const user = await authenticateUser(email, password);
 
         const accessToken = issueAccessToken({ id: user.id, role: user.role, restaurant_id: user.restaurant_id });
         res.cookie("accessToken", accessToken, getAccessCookieOptions());
@@ -40,32 +40,32 @@ export async function loginController(req, res, next) {
 }
 
 export async function getMeController(req, res, next) {
-    try {
-        const user = await findUserById(req.user.id);
+  try {
+    const user = await findUserById(req.user.id);
 
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        res.status(200).json({
-            authenticated: true,
-            user,
-        });
-    } catch (error) {
-        next(error);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
+
+    res.status(200).json({
+      authenticated: true,
+      user,
+    });
+  } catch (error) {
+    next(error);
+  }
 }
 
 export async function logoutController(req, res) {
-    const isProd = process.env.NODE_ENV === "production";
+  const isProd = process.env.NODE_ENV === "production";
 
-    res.clearCookie("accessToken", {
-        path: "/",
-        secure: isProd,
-        sameSite: isProd ? "none" : "lax",
-    });
+  res.clearCookie("accessToken", {
+    path: "/",
+    secure: isProd,
+    sameSite: isProd ? "none" : "lax",
+  });
 
-    res.status(200).json({
-        message: "Logged out successfully",
-    });
+  res.status(200).json({
+    message: "Logged out successfully",
+  });
 }

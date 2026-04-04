@@ -3,7 +3,8 @@ import * as repo from "../repository/customer.repository.js";
 // CREATE CUSTOMER
 export async function createCustomer(req, res, next) {
   try {
-    const { restaurant_id, name, email, phone } = req.body;
+    const { name, email, phone } = req.body;
+    const restaurant_id = req.user.restaurant_id;
     const customer = await repo.createCustomer(
       restaurant_id,
       name,

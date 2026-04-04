@@ -8,6 +8,11 @@ export const GET_ORDERS = `
 SELECT * FROM orders;
 `;
 
+export const GET_ORDER_BY_ID = `
+SELECT * FROM orders
+WHERE id = $1;
+`;
+
 export const UPDATE_ORDER_STATUS = `
 UPDATE orders
 SET status = $1

@@ -1,7 +1,9 @@
 import express from "express";
 import {
+  createCashPayment,
   createOrder,
   verifyPayment,
+  getPaymentHistory,
   getPaymentDetails,
   getOrderDetails,
   getPaymentRecords,
@@ -13,7 +15,13 @@ import { verifyToken } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
-// Create a new payment order
+// Get payment history grouped by method
+router.get("/history", verifyToken, getPaymentHistory);
+
+// Create a new cash payment record
+router.post("/cash", verifyToken, createCashPayment);
+
+// Create a new Razorpay order
 router.post("/order", verifyToken, createOrder);
 
 // Verify payment after client-side capture

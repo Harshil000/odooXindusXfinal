@@ -3,7 +3,8 @@ import * as repo from "../repository/category.repository.js";
 // CREATE
 export async function createCategory(req, res, next) {
   try {
-    const { restaurant_id, name } = req.body;
+    const { name } = req.body;
+    const restaurant_id = req.user.restaurant_id;
     const category = await repo.createCategory(restaurant_id, name);
     res.status(201).json(category);
   } catch (error) {

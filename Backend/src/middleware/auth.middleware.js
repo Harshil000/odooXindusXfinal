@@ -1,11 +1,11 @@
 import jwt from "jsonwebtoken";
 
 export function verifyToken(req, res, next) {
-    const token = req.cookies?.accessToken;
+  const token = req.cookies?.accessToken;
 
-    if (!token) {
-        return res.status(401).json({ message: "Not authenticated" });
-    }
+  if (!token) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
 
     try {
         const payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET);

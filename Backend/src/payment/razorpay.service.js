@@ -2,6 +2,7 @@ import razorpayInstance from "./razorpay.config.js";
 import crypto from "crypto";
 import {
   createPayment,
+  getAllPayments,
   getPaymentByOrder,
   getPaymentByRazorpayPaymentId,
   getPaymentByRazorpayOrderId as getPaymentByRazorpayOrderIdRepo,
@@ -121,6 +122,24 @@ export const updatePaymentStatus = async (
     };
   } catch (error) {
     console.error("Error updating payment status:", error.message);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+};
+
+// Get all payments
+export const fetchAllPayments = async () => {
+  try {
+    const payments = await getAllPayments();
+
+    return {
+      success: true,
+      data: payments,
+    };
+  } catch (error) {
+    console.error("Error fetching all payments:", error.message);
     return {
       success: false,
       error: error.message,

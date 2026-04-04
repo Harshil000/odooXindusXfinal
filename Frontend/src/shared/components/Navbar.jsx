@@ -4,7 +4,7 @@ import "./Navbar.scss";
 
 const navItems = [
     {
-        label: "Orders",
+        label: "Order",
         items: [
             { label: "Orders", to: "/orders" },
             { label: "Payments", to: "/payment" },
