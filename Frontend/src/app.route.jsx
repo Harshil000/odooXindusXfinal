@@ -14,6 +14,7 @@ import ProductForm from "./features/product/pages/ProductForm";
 import ProductCategories from "./features/product/pages/ProductCategories";
 import Categories from "./features/category/pages/Categories";
 import PrivateLayout from "./shared/PrivateLayout";
+import Setting from "./features/setting/pages/Setting";
 
 const router = createBrowserRouter([
   {
@@ -39,6 +40,10 @@ const router = createBrowserRouter([
       {
         path: "customers",
         element: <Customers />,
+      },
+      {
+        path: "settings",
+        element: <Setting />,
       },
       {
         path: "products",

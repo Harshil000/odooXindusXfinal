@@ -45,8 +45,34 @@ const ensurePaymentSchema = async () => {
     `);
 };
 
+const ensureRestaurantLayoutSchema = async () => {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS floors (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      restaurant_id UUID NOT NULL REFERENCES restaurants(id) ON DELETE CASCADE,
+      name VARCHAR(100) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE (restaurant_id, name)
+    );
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS restaurant_tables (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      restaurant_id UUID NOT NULL REFERENCES restaurants(id) ON DELETE CASCADE,
+      floor_id UUID NOT NULL REFERENCES floors(id) ON DELETE CASCADE,
+      table_number VARCHAR(50) NOT NULL,
+      seats INTEGER NOT NULL CHECK (seats > 0),
+      status VARCHAR(20) NOT NULL DEFAULT 'available' CHECK (status IN ('available', 'reserved', 'occupied', 'inactive')),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE (restaurant_id, floor_id, table_number)
+    );
+  `);
+};
+
 const connectDB = async () => {
   await pool.query("SELECT 1");
+  await ensureRestaurantLayoutSchema();
   await ensurePaymentSchema();
   console.log("PostgreSQL connected");
 };

@@ -7,11 +7,11 @@ import orderItemRoute from "./routes/orderItem.route.js";
 import customerRoute from "./routes/customer.route.js";
 import categoryRoute from "./routes/category.route.js";
 import floorRoute from "./routes/floor.route.js";
+import tableRoute from "./routes/table.route.js";
 import productRoute from "./routes/product.route.js";
 import authRoute from "./routes/auth.route.js";
 import paymentRoute from "./payment/payment.route.js";
 import { handleError } from "./middleware/error.middleware.js";
-import cookieParser from "cookie-parser";
 
 const app = express();
 
@@ -54,6 +54,9 @@ app.use("/api/categories", categoryRoute);
 
 // Floors
 app.use("/api/floors", floorRoute);
+
+// Tables
+app.use("/api/tables", tableRoute);
 
 // Products
 app.use("/api/products", productRoute);

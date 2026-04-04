@@ -15,7 +15,8 @@ export async function createFloor(req, res, next) {
 // GET ALL
 export async function getFloors(req, res, next) {
   try {
-    const floors = await repo.getAllFloors();
+    const restaurant_id = req.user.restaurant_id;
+    const floors = await repo.getAllFloors(restaurant_id);
     res.json(floors);
   } catch (error) {
     next(error);
@@ -25,7 +26,8 @@ export async function getFloors(req, res, next) {
 // GET ONE
 export async function getFloorById(req, res, next) {
   try {
-    const floor = await repo.getFloorById(req.params.id);
+    const restaurant_id = req.user.restaurant_id;
+    const floor = await repo.getFloorById(req.params.id, restaurant_id);
     res.json(floor);
   } catch (error) {
     next(error);
@@ -35,7 +37,8 @@ export async function getFloorById(req, res, next) {
 // UPDATE
 export async function updateFloor(req, res, next) {
   try {
-    const floor = await repo.updateFloor(req.body.name, req.params.id);
+    const restaurant_id = req.user.restaurant_id;
+    const floor = await repo.updateFloor(req.body.name, req.params.id, restaurant_id);
     res.json(floor);
   } catch (error) {
     next(error);
@@ -45,7 +48,8 @@ export async function updateFloor(req, res, next) {
 // DELETE
 export async function deleteFloor(req, res, next) {
   try {
-    await repo.deleteFloor(req.params.id);
+    const restaurant_id = req.user.restaurant_id;
+    await repo.deleteFloor(req.params.id, restaurant_id);
     res.json({ message: "Floor deleted successfully" });
   } catch (error) {
     next(error);
