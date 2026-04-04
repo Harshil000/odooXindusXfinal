@@ -4,11 +4,17 @@ import * as repo from "../repository/category.repository.js";
 export async function createCategory(req, res, next) {
   try {
     const { name, color } = req.body;
+    if (!name?.trim()) {
+      return res.status(400).json({ message: "Category name is required" });
+    }
+    if (!color?.trim()) {
+      return res.status(400).json({ message: "Category color is required" });
+    }
     const restaurant_id = req.user.restaurant_id;
     const category = await repo.createCategory(
       restaurant_id,
       name,
-      color || "white",
+      color.trim(),
     );
     res.status(201).json(category);
   } catch (error) {
@@ -41,10 +47,17 @@ export async function getCategoryById(req, res, next) {
 // UPDATE
 export async function updateCategory(req, res, next) {
   try {
+    const { name, color } = req.body;
+    if (!name?.trim()) {
+      return res.status(400).json({ message: "Category name is required" });
+    }
+    if (!color?.trim()) {
+      return res.status(400).json({ message: "Category color is required" });
+    }
     const restaurant_id = req.user.restaurant_id;
     const category = await repo.updateCategory(
-      req.body.name,
-      req.body.color || "white",
+      name,
+      color.trim(),
       req.params.id,
       restaurant_id,
     );

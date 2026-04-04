@@ -39,7 +39,9 @@ const Navbar = () => {
         <header className="navbar-shell">
             <nav className="navbar">
                 <div className="navbar-left">
-                    <h1 className="brand">Odoo Cafe</h1>
+                    <Link to={'/'}>
+                        <h1 className="brand">Odoo Cafe</h1>
+                    </Link>
                     <ul className="nav-menu" aria-label="Primary Navigation">
                         {navItems.map((item) => (
                             <li className="nav-item" key={item.label}>

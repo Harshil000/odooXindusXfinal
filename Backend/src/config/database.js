@@ -70,9 +70,27 @@ const ensureRestaurantLayoutSchema = async () => {
   `);
 };
 
+const ensureCategorySchema = async () => {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS categories (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      restaurant_id UUID NOT NULL REFERENCES restaurants(id) ON DELETE CASCADE,
+      name VARCHAR(120) NOT NULL,
+      color VARCHAR(50) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  await pool.query(`
+    ALTER TABLE IF EXISTS categories
+    ADD COLUMN IF NOT EXISTS color VARCHAR(50) NOT NULL DEFAULT 'white';
+  `);
+};
+
 const connectDB = async () => {
   await pool.query("SELECT 1");
   await ensureRestaurantLayoutSchema();
+  await ensureCategorySchema();
   await ensurePaymentSchema();
   console.log("PostgreSQL connected");
 };
