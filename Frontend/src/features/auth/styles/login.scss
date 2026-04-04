@@ -1,0 +1,175 @@
+$color-primary: #007bff;
+$color-primary-hover: #0056b3;
+$color-surface: #1f1f1f;
+$color-input-bg: #353535;
+$color-text: whitesmoke;
+$color-text-muted: #abb2bd;
+$color-white: #fff;
+$color-border: #ccc;
+
+@mixin button() {
+    padding: 0.5rem 1rem;
+    background-color: $color-primary;
+    color: $color-white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+
+    &:active {
+        transform: scale(0.95);
+    }
+
+    &:hover {
+        background-color: $color-primary-hover;
+    }
+}
+
+@mixin flex-col-center(){
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.login-register-page {
+    display: flex;
+    @include flex-col-center();
+    justify-content: center;
+    min-height: 100vh;
+    gap: 1rem;
+
+    .containerCard {
+        @include flex-col-center();
+        gap: 2rem;
+        width: clamp(300px, 50%, 350px);
+        height: 80vh;
+        background-color: $color-surface;
+        padding: 3rem 0rem;
+
+        form {
+            @include flex-col-center();
+            justify-content: center;
+            gap: 1rem;
+            width: 80%;
+
+            input {
+                width: 100%;
+                padding: 0.5rem;
+                border: 1px solid $color-border;
+                color: $color-text;
+                border-radius: 4px;
+                background-color: $color-input-bg;
+                border: none;
+                transition: all 0.25s ease;
+
+                &:focus {
+                    outline: 1px solid $color-primary;
+                    outline-offset: 2px;
+                }
+            }
+
+            .password-field {
+                position: relative;
+                width: 100%;
+
+                button {
+                    position: absolute;
+                    top: 0;
+                    bottom: 0;
+                    right: 1rem;
+                    padding: 0.25rem 0.5rem;
+                    background-color: transparent;
+                    border: none;
+                    cursor: pointer;
+                    color: $color-text;
+                    transition: all 0.25s ease;
+
+                    &:hover {
+                        color: $color-primary;
+                    }
+                }
+            }
+
+            .profile_input_container {
+                width: 100%;
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+
+                .profile_picture_button {
+                    @include button();
+                    width: fit-content;
+                    font-size: 0.75rem;
+                }
+
+                input {
+                    display: none;
+                }
+            }
+
+            textarea{
+                width: 100%;
+                padding: 0.5rem;
+                border: 1px solid $color-border;
+                color: $color-text;
+                border-radius: 4px;
+                background-color: $color-input-bg;
+                border: none;
+                transition: all 0.25s ease;
+
+                &:focus {
+                    outline: 1px solid $color-primary;
+                    outline-offset: 2px;
+                }
+            }
+
+            .submit-button {
+                width: 100%;
+                @include button();
+
+                &:active {
+                    transform: scale(0.95);
+                }
+
+                &:hover {
+                    background-color: $color-primary-hover;
+                }
+            }
+
+            .forget_text {
+                color: $color-text-muted;
+                cursor: pointer;
+                font-size: 0.875rem;
+                transition: all 0.25s ease;
+
+                &:hover {
+                    color: $color-primary;
+                }
+            }
+        }
+    }
+
+    .RedirectCard {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: clamp(300px, 50%, 350px);
+        height: 10vh;
+        background-color: $color-surface;
+
+        span {
+            color: $color-text-muted;
+            font-size: 0.875rem;
+
+            a {
+                color: $color-primary;
+                text-decoration: none;
+                transition: all 0.25s ease;
+
+                &:hover {
+                    text-decoration: underline;
+                }
+            }
+        }
+    }
+}
