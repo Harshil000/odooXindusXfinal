@@ -24,3 +24,21 @@ export async function login(data){
         throw error.response.data;
     }
 }
+
+export async function getCurrentUser() {
+    try {
+        const response = await api.get("/me");
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || { message: "Unable to load session" };
+    }
+}
+
+export async function logout() {
+    try {
+        const response = await api.post("/logout");
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || { message: "Logout failed" };
+    }
+}

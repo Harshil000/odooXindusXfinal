@@ -23,3 +23,10 @@ FROM users
 WHERE email = $1
 LIMIT 1;
 `;
+
+export const SELECT_USER_BY_ID_QUERY = `
+SELECT id, restaurant_id, name, email, role
+FROM users
+WHERE id = $1
+LIMIT 1;
+`;

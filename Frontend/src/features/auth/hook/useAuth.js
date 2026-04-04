@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 
 function useAuth() {
     const context = useContext(AuthContext);
-    const { user, loading, error, token, setUser, setLoading, setError, setToken } = context;
+    const { setUser, setLoading } = context;
     const navigate = useNavigate();
 
     async function RegisterUser(formValues) {
@@ -22,9 +22,8 @@ function useAuth() {
                 ...(formValues.role === "staff" ? { restaurant_id: formValues.restaurant_id } : {}),
             };
 
-            let user = await register(payload);
-            setUser(user);
-            setToken(user.accessToken);
+            const response = await register(payload);
+            setUser(response.user);
             navigate("/");
         } catch (error) {
             if (Array.isArray(error?.errors)) {
@@ -45,9 +44,8 @@ function useAuth() {
     async function LoginUser(formValues) {
         try {
             setLoading(true);
-            let user = await login({ email: formValues.email.toLowerCase(), password: formValues.password });
-            setUser(user);
-            setToken(user.accessToken);
+            const response = await login({ email: formValues.email.toLowerCase(), password: formValues.password });
+            setUser(response.user);
             navigate("/");
         } catch (error) {
             if (Array.isArray(error?.errors)) {
