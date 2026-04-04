@@ -6,10 +6,10 @@ import {
   INSERT_RESTAURANT_QUERY,
   SELECT_RESTAURANT_BY_ID_QUERY,
   SELECT_USER_BY_ID_QUERY,
-} from "../queries/user.queries.js";
+} from "../queries/user.query.js";
 
 export async function createUser({ name, email, password, role, restaurant_name, restaurant_id }) {
-    const client = await pool.connect();
+  const client = await pool.connect();
   try {
     await client.query("BEGIN");
     const normalizedRole = role?.toLowerCase();
@@ -37,8 +37,7 @@ export async function createUser({ name, email, password, role, restaurant_name,
 
     await client.query("COMMIT");
     return {
-      ...createdUser,
-      ...(normalizedRole === "owner" ? { restaurant_id: restaurantId, restaurant_name } : {}),
+      ...createdUser, restaurantId, restaurant_name,
     };
   } catch (error) {
     await client.query("ROLLBACK");

@@ -1,7 +1,6 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import cookieParser from "cookie-parser";
 import sessionRoute from "./routes/session.route.js";
 import orderRoute from "./routes/order.route.js";
 import orderItemRoute from "./routes/orderItem.route.js";
@@ -13,14 +12,6 @@ import { handleError } from "./middleware/error.middleware.js";
 
 const app = express();
 
-<<<<<<< HEAD
-// =========================
-// MIDDLEWARE
-// =========================
-app.use(cors());
-app.use(express.json());
-app.use(cookieParser());
-=======
 app.use(express.json())
 app.use(cookieParser())
 app.use(cors({
@@ -28,7 +19,6 @@ app.use(cors({
     credentials : true,
 }))
 app.use('/api/auth' , authRoute)
->>>>>>> Harshil
 
 // =========================
 // HEALTH CHECK
