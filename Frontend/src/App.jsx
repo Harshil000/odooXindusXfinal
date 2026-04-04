@@ -1,15 +1,4 @@
-import { useEffect } from "react"
-
-function App() {
-
-  useEffect(() => {
-    first
-  
-    return () => {
-      second
-    }
-  }, [])
-  
+function App() {  
 
   return (
     <>

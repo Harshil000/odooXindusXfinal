@@ -1,0 +1,171 @@
+.orders-page {
+  padding: 2rem;
+}
+
+.page-header {
+  margin-bottom: 1.5rem;
+}
+
+.page-header h1 {
+  font-size: 2rem;
+  margin: 0;
+}
+
+.orders-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
+}
+
+.orders-grid {
+  display: grid;
+  grid-template-columns: 1.8fr 1fr;
+  gap: 1.5rem;
+  align-items: stretch;
+}
+
+.orders-list-card,
+.order-details-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  padding: 1.25rem;
+}
+
+.order-details-card {
+  min-height: 420px;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.card-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.orders-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 100%;
+}
+
+.orders-table th,
+.orders-table td {
+  padding: 1rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.order-items-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.order-items-table th,
+.order-items-table td {
+  padding: 0.85rem 0.75rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.order-items-table th {
+  color: #6b7280;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.order-details-content {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.order-details-meta {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.order-details-meta div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.order-details-meta span {
+  color: #6b7280;
+}
+
+.order-details-meta strong {
+  font-weight: 700;
+  color: #111827;
+}
+
+.order-items-section {
+  overflow-x: auto;
+}
+
+.section-title {
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.status-pill {
+  border: none;
+  border-radius: 999px;
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+  background: #f3f4f6;
+  color: #111827;
+  font-size: 0.85rem;
+  transition: background 0.2s ease;
+}
+
+.status-pill:hover {
+  background: #e5e7eb;
+}
+
+.status-pill.paid {
+  background: #d1fae5;
+  color: #166534;
+}
+
+.status-pill.draft,
+.status-pill.pending {
+  background: #fde68a;
+  color: #92400e;
+}
+
+.status-pill.cancelled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.orders-empty {
+  text-align: center;
+  padding: 2rem;
+  color: #6b7280;
+}
+
+.orders-error {
+  color: #b91c1c;
+}
+
+.orders-table th {
+  color: #6b7280;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.orders-empty {
+  text-align: center;
+  padding: 2rem;
+  color: #6b7280;
+}
