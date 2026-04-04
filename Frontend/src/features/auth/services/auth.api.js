@@ -1,7 +1,8 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL : "http://localhost:3000/api/auth"
+    baseURL : "http://localhost:3000/api/auth",
+    withCredentials: true,
 })
 
 export async function register(data){
@@ -21,5 +22,23 @@ export async function login(data){
     } catch (error) {
         console.log(error);
         throw error.response.data;
+    }
+}
+
+export async function getCurrentUser() {
+    try {
+        const response = await api.get("/me");
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || { message: "Unable to load session" };
+    }
+}
+
+export async function logout() {
+    try {
+        const response = await api.get("/logout");
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || { message: "Logout failed" };
     }
 }

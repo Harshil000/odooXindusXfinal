@@ -1,31 +1,29 @@
 import { useContext } from "react";
 import { AuthContext } from "../auth.context";
-import { register , login } from "../services/auth.api";
+import { register, login, logout } from "../services/auth.api";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
 function useAuth() {
     const context = useContext(AuthContext);
-    const { user, loading, error, token, setUser, setLoading, setError, setToken } = context;
+    const { setUser, setLoading , user } = context;
     const navigate = useNavigate();
 
     async function RegisterUser(formValues) {
         try {
             setLoading(true);
 
-            const formData = new FormData();
-            formData.append("name", formValues.name);
-            formData.append("email", formValues.email.toLowerCase());
-            formData.append("password", formValues.password);
-            formData.append("role", formValues.role);
+            const payload = {
+                name: formValues.name,
+                email: formValues.email.toLowerCase(),
+                password: formValues.password,
+                role: formValues.role,
+                ...(formValues.role === "owner" ? { restaurant_name: formValues.restaurant_name } : {}),
+                ...(formValues.role === "staff" ? { restaurant_id: formValues.restaurant_id } : {}),
+            };
 
-            if (formValues.role === "owner") {
-                formData.append("restaurant_name", formValues.restaurant_name);
-            }
-
-            let user = await register(formData);
-            setUser(user);
-            setToken(user.accessToken);
+            const response = await register(payload);
+            setUser(response.user);
             navigate("/");
         } catch (error) {
             if (Array.isArray(error?.errors)) {
@@ -46,9 +44,8 @@ function useAuth() {
     async function LoginUser(formValues) {
         try {
             setLoading(true);
-            let user = await login({ email: formValues.email.toLowerCase(), password: formValues.password });
-            setUser(user);
-            setToken(user.accessToken);
+            const response = await login({ email: formValues.email.toLowerCase(), password: formValues.password });
+            setUser(response.user);
             navigate("/");
         } catch (error) {
             if (Array.isArray(error?.errors)) {
@@ -66,7 +63,17 @@ function useAuth() {
         }
     }
 
-    return { RegisterUser , LoginUser }
+    async function LogoutUser() {
+        try {
+            await logout();
+            setUser(null);
+            navigate("/login");
+        } catch (error) {
+            toast.error(error?.message || "Logout failed");
+        }
+    }
+    
+    return { RegisterUser, LoginUser, LogoutUser ,user }
 }
 
 export default useAuth;

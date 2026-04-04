@@ -12,7 +12,8 @@ const Register = () => {
         name: "",
         password: "",
         role: "staff",
-        restaurant_name: ""
+        restaurant_name: "",
+        restaurant_id: ""
     });
 
     const { RegisterUser } = useAuth();
@@ -29,7 +30,7 @@ const Register = () => {
             <div className="containerCard">
                 <h1>Register</h1>
                 <form onSubmit={handleSubmit}>
-                    <input onChange={handleChange} required type="text" name="name" placeholder="Enter your Full name" />
+                    <input onChange={handleChange} required type="text" name="name" placeholder="Enter your name" />
                     <select name="role" value={formValues.role} onChange={handleChange} required>
                         <option value="staff">Staff</option>
                         <option value="owner">Owner</option>
@@ -41,6 +42,15 @@ const Register = () => {
                             type="text"
                             name="restaurant_name"
                             placeholder="Enter restaurant name"
+                        />
+                    )}
+                    {formValues.role === "staff" && (
+                        <input
+                            onChange={handleChange}
+                            required
+                            type="text"
+                            name="restaurant_id"
+                            placeholder="Enter restaurant ID"
                         />
                     )}
                     <input onChange={handleChange} required type="email" name="email" placeholder="Enter your email" />
