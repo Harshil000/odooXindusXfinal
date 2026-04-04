@@ -1,6 +1,6 @@
 export const CREATE_PRODUCT = `
-INSERT INTO products (restaurant_id, category_id, name, description, price, tax_percent, variants, is_active)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+INSERT INTO products (restaurant_id, category_id, name, price, tax_percent, variants, is_active)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING *;
 `;
 
@@ -16,12 +16,11 @@ export const UPDATE_PRODUCT = `
 UPDATE products
 SET category_id = $1,
     name = $2,
-    description = $3,
-    price = $4,
-    tax_percent = $5,
-    variants = $6,
-    is_active = $7
-WHERE id = $8 AND restaurant_id = $9
+    price = $3,
+    tax_percent = $4,
+    variants = $5,
+    is_active = $6
+WHERE id = $7 AND restaurant_id = $8
 RETURNING *;
 `;
 

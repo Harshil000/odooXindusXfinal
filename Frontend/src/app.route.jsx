@@ -15,6 +15,10 @@ import ProductCategories from "./features/product/pages/ProductCategories";
 import Categories from "./features/category/pages/Categories";
 import PrivateLayout from "./shared/PrivateLayout";
 import Setting from "./features/setting/pages/Setting";
+import Kitchen from "./features/kitchen/pages/Kitchen";
+import CustomerDisplay from "./features/customerDisplay/pages/CustomerDisplay";
+import TrackOrder from "./features/customerView/pages/TrackOrder";
+import Terminal from "./features/terminal/pages/Terminal";
 
 const router = createBrowserRouter([
   {
@@ -62,7 +66,23 @@ const router = createBrowserRouter([
         path: "reporting",
         element: <App />,
       },
+      {
+        path: "kitchen",
+        element: <Kitchen />,
+      },
+      {
+        path: "terminal",
+        element: <Terminal />,
+      },
+      {
+        path: "customer-display",
+        element: <CustomerDisplay />,
+      },
     ],
+  },
+  {
+    path: "/track/:token",
+    element: <TrackOrder />,
   },
   {
     path: "/login",

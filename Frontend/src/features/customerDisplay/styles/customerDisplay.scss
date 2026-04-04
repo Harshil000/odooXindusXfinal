@@ -1,0 +1,70 @@
+.customer-display-page {
+  padding: 1rem;
+}
+
+.customer-display-card {
+  background: #fff;
+  border: 1px solid #e8e2da;
+  border-radius: 14px;
+  padding: 1rem;
+  max-width: 560px;
+}
+
+.customer-display-card h1 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.customer-display-card p {
+  color: #6b6560;
+  margin: 0.25rem 0 0.9rem;
+}
+
+.display-controls {
+  display: flex;
+  gap: 0.75rem;
+  align-items: end;
+  flex-wrap: wrap;
+}
+
+.display-controls label {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 240px;
+}
+
+.display-controls select {
+  border: 1px solid #d7cfc4;
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+}
+
+.display-error {
+  margin-top: 0.7rem;
+  color: #991b1b;
+}
+
+.qr-shell {
+  margin-top: 0.9rem;
+  border-top: 1px solid #eee7de;
+  padding-top: 0.9rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.qr-shell h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.qr-shell img {
+  width: 220px;
+  height: 220px;
+  border: 1px solid #e8e2da;
+  border-radius: 12px;
+}
+
+.qr-shell a {
+  color: #8b6f4e;
+  font-weight: 600;
+}

@@ -1,0 +1,273 @@
+.terminal-page {
+  padding: 1rem;
+}
+
+.terminal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.terminal-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.terminal-header p {
+  margin: 0.25rem 0 0;
+  color: #6b6560;
+  font-size: 0.9rem;
+}
+
+.session-chip {
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.session-chip.active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.session-chip.inactive {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.terminal-error {
+  margin: 0.5rem 0;
+  color: #991b1b;
+}
+
+.terminal-empty {
+  margin-top: 0.8rem;
+  color: #6b6560;
+}
+
+.terminal-hint {
+  margin: 0 0 0.6rem;
+  font-size: 0.82rem;
+  color: #7a6d5f;
+}
+
+.table-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.7rem;
+}
+
+.table-card {
+  border-radius: 12px;
+  padding: 0.75rem;
+  border: 1px solid #e6dfd4;
+  background: #fff;
+  display: grid;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.table-card.selected {
+  border-color: #8b6f4e;
+  box-shadow: 0 0 0 2px rgba(139, 111, 78, 0.15);
+}
+
+.table-card.available {
+  border-color: #c7e7d0;
+}
+
+.table-card.occupied {
+  border-color: #f2c9c9;
+}
+
+.table-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.table-card h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.status {
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  text-transform: capitalize;
+}
+
+.status.available {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status.occupied {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.table-card p {
+  margin: 0;
+  color: #6b6560;
+  font-size: 0.86rem;
+}
+
+.table-select-note {
+  color: #7a6d5f;
+  font-size: 0.8rem;
+}
+
+.table-actions {
+  margin-top: 0.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.products-section {
+  margin-top: 0.25rem;
+  border: 1px solid #efe8de;
+  border-radius: 10px;
+  padding: 0.45rem;
+  background: #fffcf8;
+}
+
+.products-section h3 {
+  margin: 0 0 0.4rem;
+  font-size: 0.85rem;
+  color: #5b4a37;
+}
+
+.product-list {
+  max-height: 160px;
+  overflow: auto;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.no-products {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #867462;
+}
+
+.product-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.3rem;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.product-row strong {
+  display: block;
+  font-size: 0.82rem;
+  color: #3f352b;
+}
+
+.product-row small {
+  display: block;
+  font-size: 0.75rem;
+  color: #867462;
+}
+
+.qty-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+}
+
+.qty-btn {
+  border: 1px solid #d8c8b3;
+  background: #fff;
+  color: #5b4a37;
+  border-radius: 999px;
+  width: 1.4rem;
+  height: 1.4rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.qty-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.cart-summary {
+  margin-top: 0.45rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  color: #5b4a37;
+}
+
+.pay-order-select-wrap {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.pay-order-select-wrap label {
+  font-size: 0.74rem;
+  color: #867462;
+  font-weight: 700;
+}
+
+.pay-order-select-wrap select {
+  border: 1px solid #e1d5c6;
+  border-radius: 8px;
+  padding: 0.35rem 0.45rem;
+  font-size: 0.82rem;
+  color: #4c4033;
+  background: #fff;
+}
+
+.terminal-note {
+  margin: 0;
+  color: #8a5b00;
+  font-size: 0.78rem;
+}
+
+.terminal-selected {
+  margin: 0.7rem 0 0;
+  color: #5b4a37;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.btn {
+  border: none;
+  border-radius: 999px;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: #8b6f4e;
+  color: #fff;
+}
+
+.btn-subtle {
+  background: #f4eee5;
+  color: #5b4a37;
+}
+
+.btn-danger {
+  background: #b42318;
+  color: #fff;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

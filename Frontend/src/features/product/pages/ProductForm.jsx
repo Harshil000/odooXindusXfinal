@@ -17,6 +17,7 @@ const ProductForm = () => {
   const initialProduct = location.state?.product;
 
   const [activeTab, setActiveTab] = useState("general");
+  const [submitError, setSubmitError] = useState("");
   const [formState, setFormState] = useState(() => ({
     name: initialProduct?.name || "",
     category_id: initialProduct?.category_id || "",
@@ -69,6 +70,8 @@ const ProductForm = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setSubmitError("");
+
     const payload = {
       name: formState.name,
       category_id: formState.category_id || null,
@@ -83,12 +86,16 @@ const ProductForm = () => {
       })),
     };
 
-    if (isEditMode) {
-      await updateExistingProduct(initialProduct.id, payload);
-    } else {
-      await createNewProduct(payload);
+    try {
+      if (isEditMode) {
+        await updateExistingProduct(initialProduct.id, payload);
+      } else {
+        await createNewProduct(payload);
+      }
+      navigate("/products");
+    } catch (error) {
+      setSubmitError(error?.message || "Could not save product");
     }
-    navigate("/products");
   };
 
   const categoryOptions = useMemo(() => categories || [], [categories]);
@@ -263,7 +270,7 @@ const ProductForm = () => {
           </div>
         )}
 
-        {formError && <div className="form-error">{formError}</div>}
+        {(formError || submitError) && <div className="form-error">{submitError || formError}</div>}
 
         <div className="form-actions">
           <button type="submit" className="btn btn-primary" disabled={saving}>

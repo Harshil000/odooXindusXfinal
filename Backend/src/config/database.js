@@ -68,6 +68,19 @@ const ensureRestaurantLayoutSchema = async () => {
       UNIQUE (restaurant_id, floor_id, table_number)
     );
   `);
+
+  // Repoint orders.table_id FK from legacy tables(id) to restaurant_tables(id).
+  await pool.query(`
+    ALTER TABLE IF EXISTS orders
+    DROP CONSTRAINT IF EXISTS orders_table_id_fkey;
+  `);
+
+  await pool.query(`
+    ALTER TABLE IF EXISTS orders
+    ADD CONSTRAINT orders_table_id_fkey
+    FOREIGN KEY (table_id)
+    REFERENCES restaurant_tables(id);
+  `);
 };
 
 const ensureCategorySchema = async () => {

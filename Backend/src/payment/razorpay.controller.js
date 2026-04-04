@@ -13,8 +13,39 @@ import {
   fetchAllPayments,
 } from "./razorpay.service.js";
 import dotenv from "dotenv";
+import * as orderRepo from "../repository/order.repository.js";
+import * as tableRepo from "../repository/table.repository.js";
+import { emitToRestaurant, emitToTable } from "../socket/socket.js";
 
 dotenv.config();
+
+async function settleOrderAndTable(restaurant_id, order_id) {
+  if (!restaurant_id || !order_id) return null;
+
+  const existingOrder = await orderRepo.getOrderById(order_id, restaurant_id);
+  if (!existingOrder) return null;
+
+  const paidOrder = await orderRepo.updateOrderStatus("paid", order_id, restaurant_id);
+
+  if (paidOrder?.table_id) {
+    const unpaidCount = await orderRepo.countUnpaidOrdersByTable(restaurant_id, paidOrder.table_id);
+    if (Number(unpaidCount) === 0) {
+      await tableRepo.updateTableStatus("available", paidOrder.table_id, restaurant_id);
+    }
+  }
+
+  const payload = {
+    orderId: paidOrder.id,
+    tableId: paidOrder.table_id,
+    oldStatus: existingOrder.status,
+    newStatus: paidOrder.status,
+    updatedAt: new Date().toISOString(),
+  };
+  emitToRestaurant(restaurant_id, "order.status_changed", payload);
+  emitToTable(paidOrder.table_id, "order.status_changed", payload);
+
+  return paidOrder;
+}
 
 // Create Payment Order
 export const createOrder = async (req, res) => {
@@ -76,7 +107,8 @@ export const createOrder = async (req, res) => {
 // Create Cash Payment
 export const createCashPayment = async (req, res) => {
   try {
-    const { amount, order_id, restaurant_id } = req.body;
+    const { amount, order_id } = req.body;
+    const restaurant_id = req.user?.restaurant_id;
 
     if (!amount || amount <= 0) {
       return res.status(400).json({
@@ -86,7 +118,7 @@ export const createCashPayment = async (req, res) => {
     }
 
     const paymentRecord = await createPaymentRecord(
-      restaurant_id || 1,
+      restaurant_id,
       order_id || null,
       amount,
       "cash",
@@ -102,6 +134,10 @@ export const createCashPayment = async (req, res) => {
         success: false,
         error: "Failed to create cash payment record",
       });
+    }
+
+    if (order_id) {
+      await settleOrderAndTable(restaurant_id, order_id);
     }
 
     return res.status(201).json({
@@ -195,6 +231,12 @@ export const verifyPayment = async (req, res) => {
     if (!updateResult.success) {
       console.error("Failed to update payment status in database");
       // Don't return error here as Razorpay verification succeeded
+    }
+
+    const restaurant_id = req.user?.restaurant_id;
+    const paymentRecord = await getPaymentByRazorpayId(paymentId);
+    if (paymentRecord?.success && paymentRecord?.data?.order_id && restaurant_id) {
+      await settleOrderAndTable(restaurant_id, paymentRecord.data.order_id);
     }
 
     return res.status(200).json({

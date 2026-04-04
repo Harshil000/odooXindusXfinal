@@ -6,6 +6,7 @@ const navItems = [
     {
         label: "Order",
         items: [
+            { label: "Table View", to: "/terminal" },
             { label: "Orders", to: "/orders" },
             { label: "Payments", to: "/payment" },
             { label: "Customers", to: "/customers" },

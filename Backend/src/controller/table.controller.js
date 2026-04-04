@@ -1,4 +1,5 @@
 import * as repo from "../repository/table.repository.js";
+import * as orderRepo from "../repository/order.repository.js";
 
 const VALID_STATUSES = ["available", "reserved", "occupied", "inactive"];
 
@@ -80,6 +81,31 @@ export async function deleteTable(req, res, next) {
     const restaurant_id = req.user.restaurant_id;
     await repo.deleteTable(req.params.id, restaurant_id);
     res.json({ message: "Table deleted successfully" });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// RELEASE (manual release when guests leave)
+export async function releaseTable(req, res, next) {
+  try {
+    const restaurant_id = req.user.restaurant_id;
+    const tableId = req.params.id;
+
+    const unpaidCount = await orderRepo.countUnpaidOrdersByTable(restaurant_id, tableId);
+    if (Number(unpaidCount) > 0) {
+      return res.status(400).json({
+        message: "Cannot release table with unpaid orders",
+        unpaid_orders: Number(unpaidCount),
+      });
+    }
+
+    const table = await repo.updateTableStatus("available", tableId, restaurant_id);
+    if (!table) {
+      return res.status(404).json({ message: "Table not found" });
+    }
+
+    res.json(table);
   } catch (error) {
     next(error);
   }

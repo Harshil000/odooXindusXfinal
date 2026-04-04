@@ -9,7 +9,10 @@ import categoryRoute from "./routes/category.route.js";
 import floorRoute from "./routes/floor.route.js";
 import tableRoute from "./routes/table.route.js";
 import productRoute from "./routes/product.route.js";
+import kitchenRoute from "./routes/kitchen.route.js";
 import authRoute from "./routes/auth.route.js";
+import customerDisplayRoute from "./routes/customerDisplay.route.js";
+import publicRoute from "./routes/public.route.js";
 import paymentRoute from "./payment/payment.route.js";
 import { handleError } from "./middleware/error.middleware.js";
 
@@ -19,7 +22,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: ["http://localhost:5173", "http://localhost:5174"],
     credentials: true,
   }),
 );
@@ -60,6 +63,15 @@ app.use("/api/tables", tableRoute);
 
 // Products
 app.use("/api/products", productRoute);
+
+// Kitchen
+app.use("/api/kitchen", kitchenRoute);
+
+// Customer Display (staff-side helpers like token generation)
+app.use("/api/customer-display", customerDisplayRoute);
+
+// Public tracking endpoints
+app.use("/api/public", publicRoute);
 
 // Payments
 app.use("/api/payments", paymentRoute);

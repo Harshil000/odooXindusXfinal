@@ -5,7 +5,6 @@ export async function createProduct(req, res, next) {
     const {
       category_id,
       name,
-      description,
       price,
       tax_percent,
       variants,
@@ -16,7 +15,6 @@ export async function createProduct(req, res, next) {
       restaurant_id,
       category_id || null,
       name,
-      description || "",
       price,
       tax_percent || 0,
       variants || [],
@@ -43,7 +41,6 @@ export async function updateProduct(req, res, next) {
     const {
       category_id,
       name,
-      description,
       price,
       tax_percent,
       variants,
@@ -53,7 +50,6 @@ export async function updateProduct(req, res, next) {
     const product = await repo.updateProduct(
       category_id || null,
       name,
-      description || "",
       price,
       tax_percent || 0,
       variants || [],

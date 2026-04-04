@@ -1,7 +1,12 @@
 import axios from "axios";
 
-const api = axios.create({
+const tableApi = axios.create({
   baseURL: "http://localhost:3000/api/tables",
+  withCredentials: true,
+});
+
+const displayApi = axios.create({
+  baseURL: "http://localhost:3000/api/customer-display",
   withCredentials: true,
 });
 
@@ -13,33 +18,16 @@ const normalizeError = (error) => {
 
 export async function getTables() {
   try {
-    const response = await api.get("/");
+    const response = await tableApi.get("/");
     return response.data;
   } catch (error) {
     throw normalizeError(error);
   }
 }
 
-export async function createTable(data) {
+export async function generateTrackToken(payload) {
   try {
-    const response = await api.post("/", data);
-    return response.data;
-  } catch (error) {
-    throw normalizeError(error);
-  }
-}
-
-export async function deleteTable(id) {
-  try {
-    await api.delete(`/${id}`);
-  } catch (error) {
-    throw normalizeError(error);
-  }
-}
-
-export async function releaseTable(id) {
-  try {
-    const response = await api.patch(`/${id}/release`);
+    const response = await displayApi.post("/token", payload);
     return response.data;
   } catch (error) {
     throw normalizeError(error);

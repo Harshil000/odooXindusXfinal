@@ -5,7 +5,6 @@ export async function createProduct(
   restaurant_id,
   category_id,
   name,
-  description,
   price,
   tax_percent,
   variants,
@@ -15,7 +14,6 @@ export async function createProduct(
     restaurant_id,
     category_id,
     name,
-    description,
     price,
     tax_percent,
     variants,
@@ -34,7 +32,6 @@ export async function getAllProducts(restaurant_id) {
 export async function updateProduct(
   category_id,
   name,
-  description,
   price,
   tax_percent,
   variants,
@@ -45,7 +42,6 @@ export async function updateProduct(
   const result = await pool.query(Q.UPDATE_PRODUCT, [
     category_id,
     name,
-    description,
     price,
     tax_percent,
     variants,

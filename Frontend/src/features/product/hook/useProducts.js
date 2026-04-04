@@ -52,11 +52,14 @@ const useProducts = () => {
         type: ProductActionTypes.CREATE_SUCCESS,
         payload: { product: response },
       });
+      return response;
     } catch (error) {
+      const message = error?.message || error?.error || "Could not create product";
       dispatch({
         type: ProductActionTypes.CREATE_ERROR,
-        payload: error?.message || error?.error || "Could not create product",
+        payload: message,
       });
+      throw new Error(message);
     }
   }, []);
 
@@ -68,11 +71,14 @@ const useProducts = () => {
         type: ProductActionTypes.UPDATE_SUCCESS,
         payload: { product: response },
       });
+      return response;
     } catch (error) {
+      const message = error?.message || error?.error || "Could not update product";
       dispatch({
         type: ProductActionTypes.UPDATE_ERROR,
-        payload: error?.message || error?.error || "Could not update product",
+        payload: message,
       });
+      throw new Error(message);
     }
   }, []);
 
@@ -81,11 +87,14 @@ const useProducts = () => {
     try {
       await deleteProduct(id);
       dispatch({ type: ProductActionTypes.DELETE_SUCCESS, payload: { id } });
+      return true;
     } catch (error) {
+      const message = error?.message || error?.error || "Could not delete product";
       dispatch({
         type: ProductActionTypes.DELETE_ERROR,
-        payload: error?.message || error?.error || "Could not delete product",
+        payload: message,
       });
+      throw new Error(message);
     }
   }, []);
 
@@ -97,11 +106,14 @@ const useProducts = () => {
         type: ProductActionTypes.CATEGORY_CREATE_SUCCESS,
         payload: { category: response },
       });
+      return response;
     } catch (error) {
+      const message = error?.message || error?.error || "Could not create category";
       dispatch({
         type: ProductActionTypes.CREATE_ERROR,
-        payload: error?.message || error?.error || "Could not create category",
+        payload: message,
       });
+      throw new Error(message);
     }
   }, []);
 

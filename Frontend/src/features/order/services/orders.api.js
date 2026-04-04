@@ -28,3 +28,21 @@ export async function getOrderDetails(orderId) {
     throw normalizeError(error);
   }
 }
+
+export async function createOrder(data) {
+  try {
+    const response = await api.post("/", data);
+    return response.data;
+  } catch (error) {
+    throw normalizeError(error);
+  }
+}
+
+export async function updateOrderStatus(orderId, status) {
+  try {
+    const response = await api.put(`/${orderId}`, { status });
+    return response.data;
+  } catch (error) {
+    throw normalizeError(error);
+  }
+}

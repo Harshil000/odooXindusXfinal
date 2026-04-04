@@ -42,3 +42,13 @@ export async function updateTable(floor_id, table_number, seats, status, id, res
 export async function deleteTable(id, restaurant_id) {
   await pool.query(Q.DELETE_TABLE, [id, restaurant_id]);
 }
+
+export async function updateTableStatus(status, id, restaurant_id) {
+  const result = await pool.query(Q.UPDATE_TABLE_STATUS, [status, id, restaurant_id]);
+  return result.rows[0];
+}
+
+export async function releaseTablesBySession(restaurant_id, session_id) {
+  const result = await pool.query(Q.RELEASE_TABLES_BY_SESSION, [restaurant_id, session_id]);
+  return result.rows;
+}

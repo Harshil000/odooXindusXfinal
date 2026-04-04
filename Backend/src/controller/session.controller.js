@@ -1,4 +1,6 @@
 import * as repo from "../repository/session.repository.js";
+import * as orderRepo from "../repository/order.repository.js";
+import * as tableRepo from "../repository/table.repository.js";
 import { findUserById } from "../repository/user.repository.js";
 
 async function resolveRestaurantId(req) {
@@ -43,7 +45,21 @@ export async function getActiveSession(req, res, next) {
 // CLOSE
 export async function updateSession(req, res, next) {
   try {
+    const restaurant_id = await resolveRestaurantId(req);
+    if (!restaurant_id) {
+      return res.status(400).json({ message: "Restaurant id missing for user" });
+    }
+
+    const unpaidCount = await orderRepo.countUnpaidOrdersBySession(restaurant_id, req.params.id);
+    if (Number(unpaidCount) > 0) {
+      return res.status(400).json({
+        message: "Cannot close session while unpaid orders exist",
+        unpaid_orders: Number(unpaidCount),
+      });
+    }
+
     const session = await repo.closeSession(req.params.id);
+    await tableRepo.releaseTablesBySession(restaurant_id, req.params.id);
     res.json(session);
   } catch (error) {
     next(error);
