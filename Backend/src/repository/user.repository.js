@@ -8,14 +8,7 @@ import {
   SELECT_USER_BY_ID_QUERY,
 } from "../queries/user.query.js";
 
-export async function createUser({
-  name,
-  email,
-  password,
-  role,
-  restaurant_name,
-  restaurant_id,
-}) {
+export async function createUser({ name, email, password, role, restaurant_name, restaurant_id }) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
@@ -59,10 +52,7 @@ export async function createUser({
 
     await client.query("COMMIT");
     return {
-      ...createdUser,
-      ...(normalizedRole === "owner"
-        ? { restaurant_id: restaurantId, restaurant_name }
-        : {}),
+      ...createdUser, restaurantId, restaurant_name,
     };
   } catch (error) {
     await client.query("ROLLBACK");

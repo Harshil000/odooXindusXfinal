@@ -1,6 +1,5 @@
 import express from "express";
 import cors from "cors";
-import cookieParser from "cookie-parser";
 import sessionRoute from "./routes/session.route.js";
 import orderRoute from "./routes/order.route.js";
 import orderItemRoute from "./routes/orderItem.route.js";

@@ -5,18 +5,14 @@ import { getAccessCookieOptions } from "../utils/cookie.util.js";
 import { issueAccessToken } from "../utils/token.util.js";
 
 export async function registerController(req, res, next) {
-  try {
-    const user = await createUser(req.body);
-    const accessToken = issueAccessToken({
-      id: user.id,
-      role: user.role,
-      restaurant_id: user.restaurant_id,
-    });
-    res.cookie("accessToken", accessToken, getAccessCookieOptions());
-    res.status(201).json({ msg: "User registered successfully", user });
-  } catch (error) {
-    next(error);
-  }
+    try {
+        const user = await createUser(req.body);
+        const accessToken = issueAccessToken({ id: user.id, role: user.role , restroID : user.restaurant_id});
+        res.cookie("accessToken", accessToken, getAccessCookieOptions());
+        res.status(201).json({ msg: "User registered successfully", user });
+    } catch (error) {
+        next(error);
+    }
 }
 
 export async function loginController(req, res, next) {
@@ -25,25 +21,22 @@ export async function loginController(req, res, next) {
   try {
     const user = await authenticateUser(email, password);
 
-    const accessToken = issueAccessToken({
-      id: user.id,
-      role: user.role,
-      restaurant_id: user.restaurant_id,
-    });
-    res.cookie("accessToken", accessToken, getAccessCookieOptions());
-    res.status(200).json({
-      msg: "Login successful",
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        restaurant_id: user.restaurant_id,
-      },
-    });
-  } catch (error) {
-    next(error);
-  }
+        const accessToken = issueAccessToken({ id: user.id, role: user.role , restroID : user.restaurant_id});
+        res.cookie("accessToken", accessToken, getAccessCookieOptions());
+        res.status(200).json({
+            msg: 'Login successful',
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                restaurant_id: user.restaurant_id,
+                restaurant_name: user.restaurant_name,
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
 }
 
 export async function getMeController(req, res, next) {
