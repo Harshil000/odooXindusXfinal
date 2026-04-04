@@ -36,7 +36,7 @@ export async function getCurrentUser() {
 
 export async function logout() {
     try {
-        const response = await api.post("/logout");
+        const response = await api.get("/logout");
         return response.data;
     } catch (error) {
         throw error.response?.data || { message: "Logout failed" };

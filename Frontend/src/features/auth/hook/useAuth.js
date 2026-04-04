@@ -1,12 +1,12 @@
 import { useContext } from "react";
 import { AuthContext } from "../auth.context";
-import { register , login } from "../services/auth.api";
+import { register, login, logout } from "../services/auth.api";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
 function useAuth() {
     const context = useContext(AuthContext);
-    const { setUser, setLoading } = context;
+    const { setUser, setLoading , user } = context;
     const navigate = useNavigate();
 
     async function RegisterUser(formValues) {
@@ -63,7 +63,17 @@ function useAuth() {
         }
     }
 
-    return { RegisterUser , LoginUser }
+    async function LogoutUser() {
+        try {
+            await logout();
+            setUser(null);
+            navigate("/login");
+        } catch (error) {
+            toast.error(error?.message || "Logout failed");
+        }
+    }
+    
+    return { RegisterUser, LoginUser, LogoutUser ,user }
 }
 
 export default useAuth;
