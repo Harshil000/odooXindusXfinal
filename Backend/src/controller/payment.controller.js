@@ -4,13 +4,8 @@ const Q = require("../queries/payment.query");
 // CREATE PAYMENT (initial - pending)
 exports.createPayment = async (req, res) => {
   try {
-    const {
-      restaurant_id,
-      order_id,
-      amount,
-      payment_method,
-      razorpay_order_id,
-    } = req.body;
+    const { order_id, amount, payment_method, razorpay_order_id } = req.body;
+    const restaurant_id = req.user.restaurant_id;
 
     const result = await db.query(Q.CREATE_PAYMENT, [
       restaurant_id,
@@ -25,7 +20,6 @@ exports.createPayment = async (req, res) => {
     ]);
 
     res.status(201).json(result.rows[0]);
-
   } catch (err) {
     res.status(500).json({ error: "Failed to create payment" });
   }
@@ -51,7 +45,6 @@ exports.verifyPayment = async (req, res) => {
       message: "Payment successful",
       payment: result.rows[0],
     });
-
   } catch (err) {
     res.status(500).json({ error: "Verification failed" });
   }
@@ -65,8 +58,6 @@ exports.getPayments = async (req, res) => {
 
 // GET BY ORDER
 exports.getPaymentByOrder = async (req, res) => {
-  const result = await db.query(Q.GET_PAYMENT_BY_ORDER, [
-    req.params.order_id,
-  ]);
+  const result = await db.query(Q.GET_PAYMENT_BY_ORDER, [req.params.order_id]);
   res.json(result.rows);
 };

@@ -1,5 +1,4 @@
 import express from "express";
-import cookieParser from "cookie-parser";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import sessionRoute from "./routes/session.route.js";
@@ -14,14 +13,14 @@ import { handleError } from "./middleware/error.middleware.js";
 
 const app = express();
 
-app.use(express.json())
-app.use(cookieParser())
-app.use(cors({
-    origin : "http://localhost:5173",
-    credentials : true,
-}))
-app.use('/api/auth' , authRoute)
-
+app.use(express.json());
+app.use(cookieParser());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  }),
+);
 // =========================
 // HEALTH CHECK
 // =========================
@@ -35,9 +34,6 @@ app.get("/", (req, res) => {
 
 // Authentication
 app.use("/api/auth", authRoute);
-
-// Payments
-app.use("/api/payments", paymentRoute);
 
 // Sessions
 app.use("/api/sessions", sessionRoute);

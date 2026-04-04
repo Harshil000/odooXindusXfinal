@@ -3,7 +3,8 @@ import * as repo from "../repository/session.repository.js";
 // CREATE
 export async function createSession(req, res, next) {
   try {
-    const { restaurant_id, opened_by } = req.body;
+    const { opened_by } = req.body;
+    const restaurant_id = req.user.restaurant_id;
     const session = await repo.createSession(restaurant_id, opened_by);
     res.status(201).json(session);
   } catch (error) {
@@ -14,7 +15,8 @@ export async function createSession(req, res, next) {
 // GET ACTIVE
 export async function getActiveSession(req, res, next) {
   try {
-    const session = await repo.getActiveSession(req.params.restaurant_id);
+    const restaurant_id = req.user.restaurant_id;
+    const session = await repo.getActiveSession(restaurant_id);
     res.json(session);
   } catch (error) {
     next(error);
@@ -34,7 +36,8 @@ export async function updateSession(req, res, next) {
 // GET ALL
 export async function getAllSessions(req, res, next) {
   try {
-    const sessions = await repo.getAllSessions(req.params.restaurant_id);
+    const restaurant_id = req.user.restaurant_id;
+    const sessions = await repo.getAllSessions(restaurant_id);
     res.json(sessions);
   } catch (error) {
     next(error);

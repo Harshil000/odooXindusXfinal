@@ -10,6 +10,7 @@ import {
   fetchOrderDetails,
   processRefund,
   getRefundsForPayment,
+  fetchAllPayments,
 } from "./razorpay.service.js";
 import dotenv from "dotenv";
 
@@ -48,6 +49,7 @@ export const createOrder = async (req, res) => {
     );
 
     if (!paymentRecord.success) {
+      console.error("Failed to create payment record:", paymentRecord.error);
       return res.status(500).json({
         success: false,
         error: "Failed to create payment record",
@@ -59,6 +61,7 @@ export const createOrder = async (req, res) => {
       data: {
         razorpayOrder: razorpayResult.data,
         paymentRecord: paymentRecord.data,
+        razorpayKeyId: process.env.RAZORPAY_KEY_ID,
       },
     });
   } catch (error) {
@@ -66,6 +69,94 @@ export const createOrder = async (req, res) => {
     return res.status(500).json({
       success: false,
       error: "Failed to create order",
+    });
+  }
+};
+
+// Create Cash Payment
+export const createCashPayment = async (req, res) => {
+  try {
+    const { amount, order_id, restaurant_id } = req.body;
+
+    if (!amount || amount <= 0) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid amount provided",
+      });
+    }
+
+    const paymentRecord = await createPaymentRecord(
+      restaurant_id || 1,
+      order_id || null,
+      amount,
+      "cash",
+      "completed",
+      null,
+      null,
+      null,
+      new Date(),
+    );
+
+    if (!paymentRecord.success) {
+      return res.status(500).json({
+        success: false,
+        error: "Failed to create cash payment record",
+      });
+    }
+
+    return res.status(201).json({
+      success: true,
+      data: paymentRecord.data,
+    });
+  } catch (error) {
+    console.error("Error in createCashPayment controller:", error.message);
+    return res.status(500).json({
+      success: false,
+      error: error.message || "Failed to create cash payment",
+    });
+  }
+};
+
+// Get payment history grouped by method
+export const getPaymentHistory = async (req, res) => {
+  try {
+    const result = await fetchAllPayments();
+
+    const payments = result.data.map((payment) => ({
+      ...payment,
+      payment_method:
+        payment.payment_method === "razorpay"
+          ? "netbanking"
+          : payment.payment_method,
+    }));
+
+    const grouped = payments.reduce((acc, payment) => {
+      const method = payment.payment_method || "unknown";
+      acc[method] = acc[method] || [];
+      acc[method].push(payment);
+      return acc;
+    }, {});
+
+    const totals = Object.fromEntries(
+      Object.entries(grouped).map(([method, list]) => [
+        method,
+        list.reduce((sum, payment) => sum + Number(payment.amount), 0),
+      ]),
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        payments,
+        grouped,
+        totals,
+      },
+    });
+  } catch (error) {
+    console.error("Error in getPaymentHistory controller:", error.message);
+    return res.status(500).json({
+      success: false,
+      error: "Failed to fetch payment history",
     });
   }
 };
