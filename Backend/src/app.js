@@ -8,6 +8,7 @@ import customerRoute from "./routes/customer.route.js";
 import categoryRoute from "./routes/category.route.js";
 import floorRoute from "./routes/floor.route.js";
 import authRoute from "./routes/auth.route.js";
+import paymentRoute from "./payment/payment.route.js";
 import { handleError } from "./middleware/error.middleware.js";
 
 const app = express();
@@ -34,6 +35,9 @@ app.get("/", (req, res) => {
 // Authentication
 app.use("/api/auth", authRoute);
 
+// Payments
+app.use("/api/payments", paymentRoute);
+
 // Sessions
 app.use("/api/sessions", sessionRoute);
 
@@ -52,6 +56,8 @@ app.use("/api/categories", categoryRoute);
 // Floors
 app.use("/api/floors", floorRoute);
 
+// Payments
+app.use("/api/payments", paymentRoute);
 // =========================
 // 404 HANDLER
 // =========================
