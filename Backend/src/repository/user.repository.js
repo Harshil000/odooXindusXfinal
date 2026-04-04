@@ -4,27 +4,40 @@ import {
   SELECT_USER_BY_EMAIL_QUERY,
   INSERT_USER_QUERY,
   INSERT_RESTAURANT_QUERY,
+  SELECT_RESTAURANT_BY_ID_QUERY,
 } from "../queries/user.queries.js";
 
-export async function createUser({ name, email, password, role, restaurant_name }) {
+export async function createUser({ name, email, password, role, restaurant_name, restaurant_id }) {
     const client = await pool.connect();
   try {
     await client.query("BEGIN");
     const normalizedRole = role?.toLowerCase();
+    let restaurantId;
+
+    if (normalizedRole === "owner") {
+      const restaurantResult = await client.query(INSERT_RESTAURANT_QUERY, [restaurant_name, email]);
+      restaurantId = restaurantResult.rows[0].restaurant_id;
+    }
+
+    if (normalizedRole === "staff") {
+      const restaurantResult = await client.query(SELECT_RESTAURANT_BY_ID_QUERY, [restaurant_id]);
+      if (!restaurantResult.rows[0]) {
+        const err = new Error("Restaurant not found for provided restaurant_id");
+        err.status = 404;
+        throw err;
+      }
+      restaurantId = restaurantResult.rows[0].id;
+    }
+
     const passwordHash = await argon2.hash(password);
-    const userValues = [name, email, passwordHash, normalizedRole];
+    const userValues = [restaurantId, name, email, passwordHash, normalizedRole];
     const userResult = await client.query(INSERT_USER_QUERY, userValues);
     const createdUser = userResult.rows[0];
-
-    let restaurant = null;
-    if (normalizedRole === "owner") {
-      restaurant = await client.query(INSERT_RESTAURANT_QUERY, [restaurant_name, createdUser.id]);
-    }
 
     await client.query("COMMIT");
     return {
       ...createdUser,
-      ...(restaurant ? restaurant.rows[0] : {}),
+      ...(normalizedRole === "owner" ? { restaurant_id: restaurantId, restaurant_name } : {}),
     };
   } catch (error) {
     await client.query("ROLLBACK");

@@ -13,17 +13,16 @@ function useAuth() {
         try {
             setLoading(true);
 
-            const formData = new FormData();
-            formData.append("name", formValues.name);
-            formData.append("email", formValues.email.toLowerCase());
-            formData.append("password", formValues.password);
-            formData.append("role", formValues.role);
+            const payload = {
+                name: formValues.name,
+                email: formValues.email.toLowerCase(),
+                password: formValues.password,
+                role: formValues.role,
+                ...(formValues.role === "owner" ? { restaurant_name: formValues.restaurant_name } : {}),
+                ...(formValues.role === "staff" ? { restaurant_id: formValues.restaurant_id } : {}),
+            };
 
-            if (formValues.role === "owner") {
-                formData.append("restaurant_name", formValues.restaurant_name);
-            }
-
-            let user = await register(formData);
+            let user = await register(payload);
             setUser(user);
             setToken(user.accessToken);
             navigate("/");

@@ -1,11 +1,13 @@
 import { createUser } from "../repository/user.repository.js";
 import { authenticateUser } from "../service/auth.service.js";
+import { getAccessCookieOptions } from "../utils/cookie.util.js";
 import { issueAccessToken } from "../utils/token.util.js";
 
 export async function registerController(req, res, next) {
     try {
         const user = await createUser(req.body);
         const accessToken = issueAccessToken({ id: user.id, role: user.role });
+        res.cookie("accessToken", accessToken, getAccessCookieOptions());
         res.status(201).json({ msg: "User registered successfully", user, accessToken });
     } catch (error) {
         next(error);
@@ -19,6 +21,7 @@ export async function loginController(req, res, next) {
         const user = await authenticateUser(email, password);
 
         const accessToken = issueAccessToken({ id: user.id, role: user.role });
+        res.cookie("accessToken", accessToken, getAccessCookieOptions());
         res.status(200).json({
             msg: 'Login successful',
             user: {

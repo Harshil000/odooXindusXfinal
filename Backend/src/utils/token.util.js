@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 
-const ACCESS_TOKEN_EXPIRY = "15m";
+const ACCESS_TOKEN_EXPIRY = "15d";
 
 export function issueAccessToken({ id, role }) {
   return jwt.sign({ id, role }, process.env.JWT_ACCESS_SECRET, {

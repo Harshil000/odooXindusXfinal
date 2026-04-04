@@ -21,6 +21,11 @@ export const registerValidation = [
         .trim()
         .if(body('role').equals('owner'))
         .notEmpty().withMessage('Restaurant name is required for owner role'),
+    body('restaurant_id')
+        .trim()
+        .if(body('role').equals('staff'))
+        .notEmpty().withMessage('Restaurant ID is required for staff role')
+        .isUUID().withMessage('Restaurant ID must be a valid UUID'),
     validate
 ]
 
