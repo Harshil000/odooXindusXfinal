@@ -21,6 +21,12 @@ SELECT * FROM payments
 ORDER BY created_at DESC;
 `;
 
+export const GET_PAYMENTS_BY_RESTAURANT = `
+SELECT * FROM payments
+WHERE restaurant_id = $1
+ORDER BY created_at DESC;
+`;
+
 // GET BY ORDER
 export const GET_PAYMENT_BY_ORDER = `
 SELECT * FROM payments

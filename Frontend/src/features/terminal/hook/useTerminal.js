@@ -1,10 +1,14 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getActiveSession } from "../../session/services/Session.api";
 import { getTables, releaseTable } from "../../setting/services/table.api";
 import { createOrder, getOrderDetails, getOrders } from "../../order/services/orders.api";
 import { getProducts } from "../../product/services/product.api";
 import { createOrderItem } from "../../order/services/orderItems.api";
-import { createCashPayment } from "../../payment/services/payment.api";
+import {
+  createCashPayment,
+  createRazorpayOrder,
+  verifyRazorpayPayment,
+} from "../../payment/services/payment.api";
 
 const useTerminal = () => {
   const [activeSession, setActiveSession] = useState(null);
@@ -16,6 +20,29 @@ const useTerminal = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionTableId, setActionTableId] = useState(null);
+  const createOrderInFlight = useRef(new Set());
+  const paymentInFlight = useRef(new Set());
+
+  const loadRazorpayScript = useCallback(() => new Promise((resolve) => {
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+
+    const existing = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
+    if (existing) {
+      existing.addEventListener("load", () => resolve(true), { once: true });
+      existing.addEventListener("error", () => resolve(false), { once: true });
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  }), []);
 
   const loadTerminalData = useCallback(async () => {
     setLoading(true);
@@ -110,6 +137,8 @@ const useTerminal = () => {
   }, [getCartItemsForTable]);
 
   const createOrderForTable = useCallback(async (tableId) => {
+    if (createOrderInFlight.current.has(tableId)) return;
+
     if (!activeSession?.id) {
       setError("Open a POS session before creating orders");
       return;
@@ -122,6 +151,7 @@ const useTerminal = () => {
     }
 
     setActionTableId(tableId);
+    createOrderInFlight.current.add(tableId);
     setError("");
     try {
       const created = await createOrder({
@@ -155,6 +185,7 @@ const useTerminal = () => {
     } catch (requestError) {
       setError(requestError?.message || "Could not create order for table");
     } finally {
+      createOrderInFlight.current.delete(tableId);
       setActionTableId(null);
     }
   }, [activeSession?.id, getCartItemsForTable]);
@@ -166,62 +197,147 @@ const useTerminal = () => {
     }));
   }, []);
 
-  const settleCashForTableOrder = useCallback(async (tableId) => {
+  const resolveOrderPaymentMeta = useCallback(async (tableId) => {
     const list = unpaidOrdersByTable[tableId] || [];
     if (!list.length) {
-      setError("No unpaid orders for this table");
-      return;
+      throw new Error("No unpaid orders for this table");
     }
 
     const selectedOrderId = selectedUnpaidOrderByTable[tableId];
     const latest = [...list].sort(
       (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
     )[0];
-    const selected = list.find((item) => item.id === selectedOrderId) || latest;
+    const selected = list.find((item) => String(item.id) === String(selectedOrderId)) || latest;
 
+    const detail = await getOrderDetails(selected.id);
+    const amount = (detail?.items || []).reduce(
+      (sum, item) => sum + Number(item.subtotal || 0),
+      0,
+    );
+
+    if (amount <= 0) {
+      throw new Error("Selected order has no payable amount");
+    }
+
+    return { list, selected, amount };
+  }, [selectedUnpaidOrderByTable, unpaidOrdersByTable]);
+
+  const markOrderPaidLocally = useCallback((tableId, selectedId, list) => {
+    setOrders((prev) => prev.map((item) => (
+      item.id === selectedId ? { ...item, status: "paid" } : item
+    )));
+
+    const remainingUnpaid = list.filter((item) => item.id !== selectedId).length;
+    if (remainingUnpaid === 0) {
+      setTables((prev) => prev.map((table) => {
+        if (table.id !== tableId) return table;
+        return { ...table, status: "available" };
+      }));
+    }
+
+    setSelectedUnpaidOrderByTable((prev) => {
+      const next = { ...prev };
+      if (remainingUnpaid === 0) {
+        delete next[tableId];
+      }
+      return next;
+    });
+  }, []);
+
+  const payByCashForTableOrder = useCallback(async (tableId) => {
+    if (paymentInFlight.current.has(tableId)) return;
+
+    paymentInFlight.current.add(tableId);
     setActionTableId(tableId);
     setError("");
     try {
-      const detail = await getOrderDetails(selected.id);
-      const amount = (detail?.items || []).reduce(
-        (sum, item) => sum + Number(item.subtotal || 0),
-        0,
-      );
-
-      if (amount <= 0) {
-        throw new Error("Selected order has no payable amount");
-      }
+      const { list, selected, amount } = await resolveOrderPaymentMeta(tableId);
 
       await createCashPayment({
         amount,
         order_id: selected.id,
       });
 
-      setOrders((prev) => prev.map((item) => (
-        item.id === selected.id ? { ...item, status: "paid" } : item
-      )));
-
-      const remainingUnpaid = list.filter((item) => item.id !== selected.id).length;
-      if (remainingUnpaid === 0) {
-        setTables((prev) => prev.map((table) => {
-          if (table.id !== tableId) return table;
-          return { ...table, status: "available" };
-        }));
-      }
-
-      setSelectedUnpaidOrderByTable((prev) => {
-        const next = { ...prev };
-        if (remainingUnpaid === 0) {
-          delete next[tableId];
-        }
-        return next;
-      });
+      markOrderPaidLocally(tableId, selected.id, list);
     } catch (requestError) {
-      setError(requestError?.message || "Could not settle cash payment");
+      setError(requestError?.message || "Could not complete cash payment");
     } finally {
+      paymentInFlight.current.delete(tableId);
       setActionTableId(null);
     }
-  }, [selectedUnpaidOrderByTable, unpaidOrdersByTable]);
+  }, [markOrderPaidLocally, resolveOrderPaymentMeta]);
+
+  const payByNetbankingForTableOrder = useCallback(async (tableId) => {
+    if (paymentInFlight.current.has(tableId)) return;
+
+    paymentInFlight.current.add(tableId);
+
+    setActionTableId(tableId);
+    setError("");
+    try {
+      const sdkReady = await loadRazorpayScript();
+      if (!sdkReady || !window.Razorpay) {
+        throw new Error("Razorpay SDK failed to load");
+      }
+
+      const { list, selected, amount } = await resolveOrderPaymentMeta(tableId);
+      const orderPayload = await createRazorpayOrder({
+        amount,
+        order_id: selected.id,
+      });
+
+      const razorpayOrder = orderPayload?.razorpayOrder;
+      const razorpayKeyId = orderPayload?.razorpayKeyId;
+
+      if (!razorpayOrder?.id || !razorpayKeyId) {
+        throw new Error("Could not initialize netbanking payment");
+      }
+
+      await new Promise((resolve, reject) => {
+        const instance = new window.Razorpay({
+          key: razorpayKeyId,
+          amount: Number(razorpayOrder.amount || 0),
+          currency: razorpayOrder.currency || "INR",
+          name: "POS Payment",
+          description: `Order #${String(selected.id).slice(0, 8)}`,
+          order_id: razorpayOrder.id,
+          method: {
+            netbanking: true,
+            card: false,
+            upi: false,
+            wallet: false,
+            emi: false,
+            paylater: false,
+          },
+          handler: async (response) => {
+            try {
+              await verifyRazorpayPayment({
+                paymentId: response.razorpay_payment_id,
+                orderId: response.razorpay_order_id,
+                signature: response.razorpay_signature,
+              });
+              resolve();
+            } catch (verifyError) {
+              reject(verifyError);
+            }
+          },
+          modal: {
+            ondismiss: () => reject(new Error("Payment cancelled")),
+          },
+          theme: { color: "#0f766e" },
+        });
+
+        instance.open();
+      });
+
+      markOrderPaidLocally(tableId, selected.id, list);
+    } catch (requestError) {
+      setError(requestError?.message || "Could not complete netbanking payment");
+    } finally {
+      paymentInFlight.current.delete(tableId);
+      setActionTableId(null);
+    }
+  }, [loadRazorpayScript, markOrderPaidLocally, resolveOrderPaymentMeta]);
 
   const releaseTableSafely = useCallback(async (tableId) => {
     setActionTableId(tableId);
@@ -252,7 +368,8 @@ const useTerminal = () => {
     getCartTotalForTable,
     createOrderForTable,
     selectUnpaidOrderForTable,
-    settleCashForTableOrder,
+    payByCashForTableOrder,
+    payByNetbankingForTableOrder,
     releaseTableSafely,
     refresh: loadTerminalData,
   };

@@ -19,11 +19,13 @@ const Terminal = () => {
     getCartTotalForTable,
     createOrderForTable,
     selectUnpaidOrderForTable,
-    settleCashForTableOrder,
+    payByCashForTableOrder,
+    payByNetbankingForTableOrder,
     releaseTableSafely,
   } = useTerminal();
 
   const [selectedTableId, setSelectedTableId] = useState("");
+  const [paymentMenuTableId, setPaymentMenuTableId] = useState(null);
 
   useEffect(() => {
     if (!tables.length) {
@@ -76,7 +78,7 @@ const Terminal = () => {
               || "";
 
             const placeOrderDisabled = !activeSession || busy || cartItems.length === 0;
-            const settleDisabled = busy || unpaidCount === 0;
+            const paymentDisabled = busy || unpaidCount === 0;
             const releaseDisabled = busy || table.status === "available";
 
             let disableReason = "";
@@ -133,7 +135,10 @@ const Terminal = () => {
                             <button
                               type="button"
                               className="qty-btn"
-                              onClick={() => decrementProduct(table.id, product.id)}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                decrementProduct(table.id, product.id);
+                              }}
                               disabled={busy || qty === 0}
                             >
                               -
@@ -142,7 +147,10 @@ const Terminal = () => {
                             <button
                               type="button"
                               className="qty-btn"
-                              onClick={() => incrementProduct(table.id, product.id)}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                incrementProduct(table.id, product.id);
+                              }}
                               disabled={busy}
                             >
                               +
@@ -163,7 +171,11 @@ const Terminal = () => {
                   <select
                     id={`pay-order-${table.id}`}
                     value={selectedOrderId}
-                    onChange={(event) => selectUnpaidOrderForTable(table.id, event.target.value)}
+                    onClick={(event) => event.stopPropagation()}
+                    onChange={(event) => {
+                      event.stopPropagation();
+                      selectUnpaidOrderForTable(table.id, event.target.value);
+                    }}
                     disabled={busy || unpaidCount === 0}
                   >
                     {unpaidCount === 0 ? (
@@ -185,7 +197,10 @@ const Terminal = () => {
                     type="button"
                     className="btn btn-primary"
                     disabled={placeOrderDisabled}
-                    onClick={() => createOrderForTable(table.id)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      createOrderForTable(table.id);
+                    }}
                   >
                     {busy ? "Working..." : "Place Order"}
                   </button>
@@ -193,21 +208,56 @@ const Terminal = () => {
                   <button
                     type="button"
                     className="btn btn-subtle"
-                    disabled={settleDisabled}
-                    onClick={() => settleCashForTableOrder(table.id)}
+                    disabled={paymentDisabled}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setPaymentMenuTableId((prev) => (prev === table.id ? null : table.id));
+                    }}
                   >
-                    Settle Cash
+                    Payment
                   </button>
 
                   <button
                     type="button"
                     className="btn btn-danger"
                     disabled={releaseDisabled}
-                    onClick={() => releaseTableSafely(table.id)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      releaseTableSafely(table.id);
+                    }}
                   >
                     Release Table
                   </button>
                 </div>
+
+                {paymentMenuTableId === table.id && (
+                  <div className="table-actions">
+                    <button
+                      type="button"
+                      className="btn btn-subtle"
+                      disabled={paymentDisabled}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setPaymentMenuTableId(null);
+                        payByCashForTableOrder(table.id);
+                      }}
+                    >
+                      Pay by Cash
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      disabled={paymentDisabled}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setPaymentMenuTableId(null);
+                        payByNetbankingForTableOrder(table.id);
+                      }}
+                    >
+                      Pay by Netbanking
+                    </button>
+                  </div>
+                )}
                   </>
                 )}
               </article>

@@ -31,6 +31,11 @@ export async function getAllPayments() {
   return result.rows;
 }
 
+export async function getPaymentsByRestaurant(restaurant_id) {
+  const result = await pool.query(Q.GET_PAYMENTS_BY_RESTAURANT, [restaurant_id]);
+  return result.rows;
+}
+
 export async function getPaymentByOrder(order_id) {
   const result = await pool.query(Q.GET_PAYMENT_BY_ORDER, [order_id]);
   return result.rows;

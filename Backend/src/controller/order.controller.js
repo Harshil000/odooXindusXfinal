@@ -1,7 +1,7 @@
 import * as repo from "../repository/order.repository.js";
 import * as itemRepo from "../repository/orderItem.repository.js";
 import * as tableRepo from "../repository/table.repository.js";
-import { emitToRestaurant, emitToTable } from "../socket/socket.js";
+import { emitToRestaurantAndTable } from "../socket/socket.js";
 
 const KITCHEN_STATUSES = ["to_cook", "preparing", "completed"];
 
@@ -22,8 +22,7 @@ export async function createOrder(req, res, next) {
       createdAt: order.created_at,
       sessionId: order.session_id,
     };
-    emitToRestaurant(restaurant_id, "order.created", payload);
-    emitToTable(order.table_id, "order.created", payload);
+    emitToRestaurantAndTable(restaurant_id, order.table_id, "order.created", payload);
 
     res.status(201).json(order);
   } catch (error) {
@@ -81,8 +80,7 @@ export async function updateOrder(req, res, next) {
       newStatus: order.status,
       updatedAt: new Date().toISOString(),
     };
-    emitToRestaurant(restaurant_id, "order.status_changed", payload);
-    emitToTable(order.table_id, "order.status_changed", payload);
+    emitToRestaurantAndTable(restaurant_id, order.table_id, "order.status_changed", payload);
 
     res.json(order);
   } catch (error) {
@@ -138,8 +136,7 @@ export async function updateKitchenOrderStatus(req, res, next) {
       updatedAt: new Date().toISOString(),
     };
 
-    emitToRestaurant(restaurant_id, "order.status_changed", payload);
-    emitToTable(order.table_id, "order.status_changed", payload);
+    emitToRestaurantAndTable(restaurant_id, order.table_id, "order.status_changed", payload);
 
     res.json(order);
   } catch (error) {

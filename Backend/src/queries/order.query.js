@@ -1,6 +1,6 @@
 export const CREATE_ORDER = `
-INSERT INTO orders (restaurant_id, table_id, session_id)
-VALUES ($1, $2, $3)
+INSERT INTO orders (restaurant_id, table_id, session_id, status)
+VALUES ($1, $2, $3, 'to_cook')
 RETURNING *;
 `;
 
@@ -31,9 +31,14 @@ WHERE id = $1 AND restaurant_id = $2;
 export const GET_KITCHEN_ORDERS = `
 SELECT
 	o.*,
-	COALESCE(COUNT(oi.id), 0)::int AS item_count
+	COALESCE(COUNT(oi.id), 0)::int AS item_count,
+	COALESCE(
+		ARRAY_REMOVE(ARRAY_AGG(DISTINCT p.name), NULL),
+		'{}'::text[]
+	) AS product_names
 FROM orders o
 LEFT JOIN order_items oi ON oi.order_id = o.id
+LEFT JOIN products p ON p.id = oi.product_id
 WHERE o.restaurant_id = $1
 	AND o.status = ANY($2::text[])
 GROUP BY o.id

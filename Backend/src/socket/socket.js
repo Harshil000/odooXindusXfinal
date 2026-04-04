@@ -34,3 +34,14 @@ export function emitToTable(tableId, eventName, payload) {
   if (!ioInstance || !tableId) return;
   ioInstance.to(`table:${tableId}`).emit(eventName, payload);
 }
+
+export function emitToRestaurantAndTable(restaurantId, tableId, eventName, payload) {
+  if (!ioInstance || !restaurantId) return;
+
+  const target = ioInstance.to(`restaurant:${restaurantId}`);
+  if (tableId) {
+    target.to(`table:${tableId}`);
+  }
+
+  target.emit(eventName, payload);
+}

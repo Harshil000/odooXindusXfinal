@@ -63,6 +63,14 @@ const Kitchen = () => {
                       <strong>{order.item_count || 0}</strong>
                     </div>
                     <div className="ticket-row">
+                      <span className="ticket-label">Products</span>
+                      <strong>
+                        {Array.isArray(order.product_names) && order.product_names.length
+                          ? order.product_names.join(", ")
+                          : "-"}
+                      </strong>
+                    </div>
+                    <div className="ticket-row">
                       <span className="ticket-label">Time</span>
                       <strong>{formatTime(order.created_at)}</strong>
                     </div>

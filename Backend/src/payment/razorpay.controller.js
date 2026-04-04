@@ -11,11 +11,12 @@ import {
   processRefund,
   getRefundsForPayment,
   fetchAllPayments,
+  fetchPaymentsByRestaurant,
 } from "./razorpay.service.js";
 import dotenv from "dotenv";
 import * as orderRepo from "../repository/order.repository.js";
 import * as tableRepo from "../repository/table.repository.js";
-import { emitToRestaurant, emitToTable } from "../socket/socket.js";
+import { emitToRestaurantAndTable } from "../socket/socket.js";
 
 dotenv.config();
 
@@ -41,8 +42,7 @@ async function settleOrderAndTable(restaurant_id, order_id) {
     newStatus: paidOrder.status,
     updatedAt: new Date().toISOString(),
   };
-  emitToRestaurant(restaurant_id, "order.status_changed", payload);
-  emitToTable(paidOrder.table_id, "order.status_changed", payload);
+  emitToRestaurantAndTable(restaurant_id, paidOrder.table_id, "order.status_changed", payload);
 
   return paidOrder;
 }
@@ -50,7 +50,8 @@ async function settleOrderAndTable(restaurant_id, order_id) {
 // Create Payment Order
 export const createOrder = async (req, res) => {
   try {
-    const { amount, currency = "INR", order_id, restaurant_id } = req.body;
+    const { amount, currency = "INR", order_id } = req.body;
+    const restaurant_id = req.user?.restaurant_id;
 
     if (!amount || amount <= 0) {
       return res.status(400).json({
@@ -68,7 +69,7 @@ export const createOrder = async (req, res) => {
 
     // Create payment record in database
     const paymentRecord = await createPaymentRecord(
-      restaurant_id || 1, // Default restaurant ID
+      restaurant_id,
       order_id,
       amount,
       "razorpay",
@@ -156,7 +157,10 @@ export const createCashPayment = async (req, res) => {
 // Get payment history grouped by method
 export const getPaymentHistory = async (req, res) => {
   try {
-    const result = await fetchAllPayments();
+    const restaurant_id = req.user?.restaurant_id;
+    const result = restaurant_id
+      ? await fetchPaymentsByRestaurant(restaurant_id)
+      : await fetchAllPayments();
 
     const payments = result.data.map((payment) => ({
       ...payment,

@@ -3,6 +3,7 @@ import crypto from "crypto";
 import {
   createPayment,
   getAllPayments,
+  getPaymentsByRestaurant,
   getPaymentByOrder,
   getPaymentByRazorpayPaymentId,
   getPaymentByRazorpayOrderId as getPaymentByRazorpayOrderIdRepo,
@@ -140,6 +141,23 @@ export const fetchAllPayments = async () => {
     };
   } catch (error) {
     console.error("Error fetching all payments:", error.message);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+};
+
+export const fetchPaymentsByRestaurant = async (restaurant_id) => {
+  try {
+    const payments = await getPaymentsByRestaurant(restaurant_id);
+
+    return {
+      success: true,
+      data: payments,
+    };
+  } catch (error) {
+    console.error("Error fetching restaurant payments:", error.message);
     return {
       success: false,
       error: error.message,

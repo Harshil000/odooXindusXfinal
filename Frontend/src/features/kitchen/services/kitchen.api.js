@@ -14,7 +14,7 @@ const normalizeError = (error) => {
 export async function getKitchenOrders() {
   try {
     const response = await api.get("/orders", {
-      params: { status: "to_cook,preparing,completed" },
+      params: { status: "to_cook,preparing,completed,pending" },
     });
     return response.data;
   } catch (error) {
