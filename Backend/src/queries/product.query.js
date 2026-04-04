@@ -1,15 +1,30 @@
 export const CREATE_PRODUCT = `
-INSERT INTO products (restaurant_id, category_id, name, price)
-VALUES ($1,$2,$3,$4)
+INSERT INTO products (restaurant_id, category_id, name, description, price, tax_percent, variants, is_active)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 RETURNING *;
 `;
 
-export const GET_PRODUCTS = `SELECT * FROM products;`;
+export const GET_PRODUCTS_BY_RESTAURANT = `
+SELECT p.*, c.name AS category_name
+FROM products p
+LEFT JOIN categories c ON p.category_id = c.id
+WHERE p.restaurant_id = $1
+ORDER BY p.name ASC;
+`;
 
 export const UPDATE_PRODUCT = `
-UPDATE products SET price=$1 WHERE id=$2 RETURNING *;
+UPDATE products
+SET category_id = $1,
+    name = $2,
+    description = $3,
+    price = $4,
+    tax_percent = $5,
+    variants = $6,
+    is_active = $7
+WHERE id = $8 AND restaurant_id = $9
+RETURNING *;
 `;
 
 export const DELETE_PRODUCT = `
-DELETE FROM products WHERE id=$1;
+DELETE FROM products WHERE id=$1 AND restaurant_id = $2;
 `;
