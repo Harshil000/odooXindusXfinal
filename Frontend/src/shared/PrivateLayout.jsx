@@ -3,10 +3,12 @@ import Navbar from "./components/Navbar";
 
 const PrivateLayout = () => {
   return (
-    <>
+    <div className="private-layout">
       <Navbar />
-      <Outlet />
-    </>
+      <main className="private-layout__content">
+        <Outlet />
+      </main>
+    </div>
   );
 };
 

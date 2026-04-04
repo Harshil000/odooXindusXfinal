@@ -13,6 +13,10 @@ html , body , #root{
     font-family: 'Georgia', 'Times New Roman', serif;
 }
 
+body {
+    overflow: hidden;
+}
+
 :root {
     --bg-primary: #FAFAF8;
     --bg-secondary: #FFFFFF;
@@ -43,4 +47,17 @@ a {
 
 a:hover {
     color: var(--accent-hover);
+}
+
+.private-layout {
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.private-layout__content {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
 }

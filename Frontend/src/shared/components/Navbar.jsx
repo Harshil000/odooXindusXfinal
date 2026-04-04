@@ -33,8 +33,8 @@ const actionItems = [
 
 const Navbar = () => {
 
-    const {LogoutUser , user} = useAuth();
-    
+    const { LogoutUser, user } = useAuth();
+
     return (
         <header className="navbar-shell">
             <nav className="navbar">
@@ -59,12 +59,6 @@ const Navbar = () => {
                 </div>
 
                 <div className="navbar-right">
-                    <button type="button" className="btn btn-secondary">
-                        New Session
-                    </button>
-                    <button type="button" className="btn btn-primary">
-                        New Order
-                    </button>
                     <div className="menu-dots-wrapper">
                         <button type="button" className="menu-dots" aria-label="More options">
                             &#8942;
@@ -88,8 +82,8 @@ const Navbar = () => {
                         </div>
                     </div>
                     <div className="navbar-user">
-                        <div className="user-avatar">{user.name[0].toUpperCase()}</div>
-                        <span className="user-display">{user.name}</span>
+                        <div className="user-avatar">{user?.name?.[0]?.toUpperCase() || "U"}</div>
+                        <span className="user-display">{user?.name || "User"}</span>
                     </div>
                 </div>
             </nav>

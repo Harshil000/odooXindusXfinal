@@ -5,8 +5,9 @@ import { verifyToken } from "../middleware/auth.middleware.js";
 const router = express.Router();
 
 router.post("/", verifyToken, ctrl.createSession);
+router.get("/active", verifyToken, ctrl.getActiveSession);
 router.get("/active/:restaurant_id", verifyToken, ctrl.getActiveSession);
 router.put("/:id", verifyToken, ctrl.updateSession);
-router.get("/:restaurant_id", verifyToken, ctrl.getAllSessions);
+router.get("/", verifyToken, ctrl.getAllSessions);
 
 export default router;
