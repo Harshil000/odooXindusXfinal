@@ -1,27 +1,30 @@
 import { pool } from "../config/database.js";
 import argon2 from "argon2";
 import {
-  INSERT_USER_PROFILE_QUERY,
-  INSERT_USER_PROFILE_WITH_DEFAULT_PIC_QUERY,
   SELECT_USER_BY_EMAIL_QUERY,
   INSERT_USER_QUERY,
+  INSERT_RESTAURANT_QUERY,
 } from "../queries/user.queries.js";
 
-export async function createUser({ username, email, password, full_name, bio, profile_pic_url = null }) {
+export async function createUser({ name, email, password, role, restaurant_name }) {
     const client = await pool.connect();
   try {
     await client.query("BEGIN");
+    const normalizedRole = role?.toLowerCase();
     const passwordHash = await argon2.hash(password);
-    const userValues = [username, email, passwordHash];
+    const userValues = [name, email, passwordHash, normalizedRole];
     const userResult = await client.query(INSERT_USER_QUERY, userValues);
     const createdUser = userResult.rows[0];
-    const profileResult = profile_pic_url == null
-      ? await client.query(INSERT_USER_PROFILE_WITH_DEFAULT_PIC_QUERY, [createdUser.id, full_name, bio ?? null])
-      : await client.query(INSERT_USER_PROFILE_QUERY, [createdUser.id, full_name, bio ?? null, profile_pic_url]);
+
+    let restaurant = null;
+    if (normalizedRole === "owner") {
+      restaurant = await client.query(INSERT_RESTAURANT_QUERY, [restaurant_name, createdUser.id]);
+    }
+
     await client.query("COMMIT");
     return {
       ...createdUser,
-      ...profileResult.rows[0],
+      ...(restaurant ? restaurant.rows[0] : {}),
     };
   } catch (error) {
     await client.query("ROLLBACK");

@@ -9,19 +9,18 @@ function useAuth() {
     const { user, loading, error, token, setUser, setLoading, setError, setToken } = context;
     const navigate = useNavigate();
 
-    async function RegisterUser(formValues, profilePictureFile) {
+    async function RegisterUser(formValues) {
         try {
             setLoading(true);
 
             const formData = new FormData();
-            formData.append("full_name", formValues.name);
-            formData.append("username", formValues.username);
+            formData.append("name", formValues.name);
             formData.append("email", formValues.email.toLowerCase());
             formData.append("password", formValues.password);
-            formData.append("bio", formValues.bio);
+            formData.append("role", formValues.role);
 
-            if (profilePictureFile) {
-                formData.append("profile_picture", profilePictureFile);
+            if (formValues.role === "owner") {
+                formData.append("restaurant_name", formValues.restaurant_name);
             }
 
             let user = await register(formData);
@@ -47,7 +46,7 @@ function useAuth() {
     async function LoginUser(formValues) {
         try {
             setLoading(true);
-            let user = await login({emailorusername: formValues.emailorusername.toLowerCase(), password: formValues.password});
+            let user = await login({ email: formValues.email.toLowerCase(), password: formValues.password });
             setUser(user);
             setToken(user.accessToken);
             navigate("/");

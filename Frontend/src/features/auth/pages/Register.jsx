@@ -1,28 +1,25 @@
 import { useForm } from "../hook/useForm"
 import useAuth from "../hook/useAuth"
-import { useState } from "react";
 import { Link } from "react-router-dom"
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'
 import PasswordField from "../components/PasswordField"
-import FileInput from "../components/FileInput"
 import "../styles/login.scss"
 
 const Register = () => {
     const { formValues, handleChange } = useForm({
         email: "",
         name: "",
-        username: "",
         password: "",
-        bio: ""
+        role: "staff",
+        restaurant_name: ""
     });
-    const [profilePictureFile, setProfilePictureFile] = useState(null);
 
     const { RegisterUser } = useAuth();
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        RegisterUser(formValues, profilePictureFile);
+        RegisterUser(formValues);
     }
 
 
@@ -33,11 +30,21 @@ const Register = () => {
                 <h1>Register</h1>
                 <form onSubmit={handleSubmit}>
                     <input onChange={handleChange} required type="text" name="name" placeholder="Enter your Full name" />
-                    <input onChange={handleChange} required type="text" name="username" placeholder="Enter your Username" />
-                    <FileInput onChange={handleChange} onFileSelect={setProfilePictureFile} />
+                    <select name="role" value={formValues.role} onChange={handleChange} required>
+                        <option value="staff">Staff</option>
+                        <option value="owner">Owner</option>
+                    </select>
+                    {formValues.role === "owner" && (
+                        <input
+                            onChange={handleChange}
+                            required
+                            type="text"
+                            name="restaurant_name"
+                            placeholder="Enter restaurant name"
+                        />
+                    )}
                     <input onChange={handleChange} required type="email" name="email" placeholder="Enter your email" />
                     <PasswordField onChange={handleChange} />
-                    <textarea required rows={8} onChange={handleChange} name="bio" placeholder="Enter your bio" />
                     <button className="submit-button" type="submit">Register</button>
                 </form>
             </div>

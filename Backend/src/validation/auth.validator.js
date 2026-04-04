@@ -9,16 +9,23 @@ function validate(req , res , next){
 }
 
 export const registerValidation = [
-    body('username').notEmpty().withMessage('Username is required'),
-    body('email').isEmail().withMessage('Valid email is required'),
+    body('name').trim().notEmpty().withMessage('Name is required'),
+    body('email').trim().isEmail().withMessage('Valid email is required'),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
-    body('full_name').notEmpty().withMessage('Full name is required'),
-    body('bio').notEmpty().withMessage('Bio is required'),
+    body('role')
+        .trim()
+        .toLowerCase()
+        .notEmpty().withMessage('Role is required')
+        .isIn(['owner', 'staff']).withMessage('Role must be owner or staff'),
+    body('restaurant_name')
+        .trim()
+        .if(body('role').equals('owner'))
+        .notEmpty().withMessage('Restaurant name is required for owner role'),
     validate
 ]
 
 export const loginValidation = [
-    body('emailorusername').notEmpty().withMessage('Email or username is required'),
+    body('email').trim().isEmail().withMessage('Valid email is required'),
     body('password').notEmpty().withMessage('Password is required'),
     validate
 ]

@@ -7,7 +7,7 @@ import "../styles/login.scss"
 
 const Login = () => {
     const { formValues , handleChange } = useForm({
-        emailorusername: "",
+        email: "",
         password: ""
     });
 
@@ -24,12 +24,9 @@ const Login = () => {
             <div className="containerCard">
                 <h1>Login</h1>
                 <form onSubmit={handleSubmit}>
-                    <input required onChange={handleChange} type="text" name="emailorusername" placeholder="Enter your username or email" />
+                    <input required onChange={handleChange} type="email" name="email" placeholder="Enter your email" />
                     <PasswordField onChange={handleChange} />
                     <button className="submit-button" type="submit">Login</button>
-                    <span className="forget_text">
-                        forget Password ?
-                    </span>
                 </form>
             </div>
             <div className="RedirectCard">

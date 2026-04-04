@@ -52,7 +52,8 @@ $color-border: #ccc;
             gap: 1rem;
             width: 80%;
 
-            input {
+            input,
+            select {
                 width: 100%;
                 padding: 0.5rem;
                 border: 1px solid $color-border;
