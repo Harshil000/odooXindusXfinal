@@ -7,7 +7,7 @@ import { issueAccessToken } from "../utils/token.util.js";
 export async function registerController(req, res, next) {
     try {
         const user = await createUser(req.body);
-        const accessToken = issueAccessToken({ id: user.id, role: user.role , restroID : user.restaurant_id});
+        const accessToken = issueAccessToken({ id: user.id, role: user.role, restaurant_id: user.restaurant_id });
         res.cookie("accessToken", accessToken, getAccessCookieOptions());
         res.status(201).json({ msg: "User registered successfully", user, accessToken });
     } catch (error) {
@@ -21,7 +21,7 @@ export async function loginController(req, res, next) {
   try {
     const user = await authenticateUser(email, password);
 
-        const accessToken = issueAccessToken({ id: user.id, role: user.role , restroID : user.restaurant_id});
+        const accessToken = issueAccessToken({ id: user.id, role: user.role, restaurant_id: user.restaurant_id });
         res.cookie("accessToken", accessToken, getAccessCookieOptions());
         res.status(200).json({
             msg: 'Login successful',

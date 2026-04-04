@@ -18,7 +18,7 @@ LIMIT 1;
 `;
 
 export const SELECT_USER_BY_EMAIL_QUERY = `
-SELECT id, name, email, password AS password_hash, role
+SELECT id, restaurant_id, name, email, password AS password_hash, role
 FROM users
 WHERE email = $1
 LIMIT 1;
