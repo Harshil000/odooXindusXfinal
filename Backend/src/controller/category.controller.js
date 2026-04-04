@@ -3,9 +3,13 @@ import * as repo from "../repository/category.repository.js";
 // CREATE
 export async function createCategory(req, res, next) {
   try {
-    const { name } = req.body;
+    const { name, color } = req.body;
     const restaurant_id = req.user.restaurant_id;
-    const category = await repo.createCategory(restaurant_id, name);
+    const category = await repo.createCategory(
+      restaurant_id,
+      name,
+      color || "white",
+    );
     res.status(201).json(category);
   } catch (error) {
     next(error);
@@ -15,7 +19,8 @@ export async function createCategory(req, res, next) {
 // GET ALL
 export async function getCategories(req, res, next) {
   try {
-    const categories = await repo.getAllCategories();
+    const restaurant_id = req.user.restaurant_id;
+    const categories = await repo.getAllCategories(restaurant_id);
     res.json(categories);
   } catch (error) {
     next(error);
@@ -25,7 +30,8 @@ export async function getCategories(req, res, next) {
 // GET ONE
 export async function getCategoryById(req, res, next) {
   try {
-    const category = await repo.getCategoryById(req.params.id);
+    const restaurant_id = req.user.restaurant_id;
+    const category = await repo.getCategoryById(req.params.id, restaurant_id);
     res.json(category);
   } catch (error) {
     next(error);
@@ -35,7 +41,13 @@ export async function getCategoryById(req, res, next) {
 // UPDATE
 export async function updateCategory(req, res, next) {
   try {
-    const category = await repo.updateCategory(req.body.name, req.params.id);
+    const restaurant_id = req.user.restaurant_id;
+    const category = await repo.updateCategory(
+      req.body.name,
+      req.body.color || "white",
+      req.params.id,
+      restaurant_id,
+    );
     res.json(category);
   } catch (error) {
     next(error);
@@ -45,7 +57,8 @@ export async function updateCategory(req, res, next) {
 // DELETE
 export async function deleteCategory(req, res, next) {
   try {
-    await repo.deleteCategory(req.params.id);
+    const restaurant_id = req.user.restaurant_id;
+    await repo.deleteCategory(req.params.id, restaurant_id);
     res.json({ message: "Category deleted successfully" });
   } catch (error) {
     next(error);

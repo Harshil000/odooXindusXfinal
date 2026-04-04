@@ -8,6 +8,7 @@ const api = axios.create({
 export async function register(data){
     try {
         const response = await api.post("/register", data);
+        console.log("✅ Registration Response:", response);
         return response.data;
     } catch (error) {
         console.log(error);

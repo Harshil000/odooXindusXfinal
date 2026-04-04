@@ -9,7 +9,7 @@ export async function registerController(req, res, next) {
         const user = await createUser(req.body);
         const accessToken = issueAccessToken({ id: user.id, role: user.role, restaurant_id: user.restaurant_id });
         res.cookie("accessToken", accessToken, getAccessCookieOptions());
-        res.status(201).json({ msg: "User registered successfully", user });
+        res.status(201).json({ msg: "User registered successfully", user, accessToken });
     } catch (error) {
         next(error);
     }

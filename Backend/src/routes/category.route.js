@@ -5,8 +5,8 @@ import { verifyToken } from "../middleware/auth.middleware.js";
 const router = express.Router();
 
 router.post("/", verifyToken, ctrl.createCategory);
-router.get("/", ctrl.getCategories);
-router.get("/:id", ctrl.getCategoryById);
+router.get("/", verifyToken, ctrl.getCategories);
+router.get("/:id", verifyToken, ctrl.getCategoryById);
 router.put("/:id", verifyToken, ctrl.updateCategory);
 router.delete("/:id", verifyToken, ctrl.deleteCategory);
 

@@ -39,6 +39,7 @@ function useAuth() {
       };
 
       const response = await register(payload);
+      console.log("✅ Registration Response:", response);
       setUser(response.user);
 
       // Decode token and log restaurant_id
