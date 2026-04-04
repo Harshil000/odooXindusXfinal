@@ -1,43 +1,42 @@
-const db = require("../config/db");
-const Q = require("../queries/session.query");
+import * as repo from "../repository/session.repository.js";
 
 // CREATE
-exports.createSession = async (req, res) => {
-  const { restaurant_id, opened_by } = req.body;
-
-  const existing = await db.query(Q.GET_ACTIVE_SESSION, [restaurant_id]);
-
-  if (existing.rows.length > 0) {
-    return res.status(400).json({ message: "Session already active" });
+export async function createSession(req, res, next) {
+  try {
+    const { restaurant_id, opened_by } = req.body;
+    const session = await repo.createSession(restaurant_id, opened_by);
+    res.status(201).json(session);
+  } catch (error) {
+    next(error);
   }
-
-  const result = await db.query(Q.CREATE_SESSION, [
-    restaurant_id,
-    opened_by,
-  ]);
-
-  res.status(201).json(result.rows[0]);
-};
+}
 
 // GET ACTIVE
-exports.getActiveSession = async (req, res) => {
-  const result = await db.query(Q.GET_ACTIVE_SESSION, [
-    req.params.restaurant_id,
-  ]);
-
-  res.json(result.rows[0]);
-};
+export async function getActiveSession(req, res, next) {
+  try {
+    const session = await repo.getActiveSession(req.params.restaurant_id);
+    res.json(session);
+  } catch (error) {
+    next(error);
+  }
+}
 
 // CLOSE
-exports.updateSession = async (req, res) => {
-  const result = await db.query(Q.CLOSE_SESSION, [req.params.id]);
-  res.json(result.rows[0]);
-};
+export async function updateSession(req, res, next) {
+  try {
+    const session = await repo.closeSession(req.params.id);
+    res.json(session);
+  } catch (error) {
+    next(error);
+  }
+}
 
 // GET ALL
-exports.getAllSessions = async (req, res) => {
-  const result = await db.query(Q.GET_ALL_SESSIONS, [
-    req.params.restaurant_id,
-  ]);
-  res.json(result.rows);
-};
+export async function getAllSessions(req, res, next) {
+  try {
+    const sessions = await repo.getAllSessions(req.params.restaurant_id);
+    res.json(sessions);
+  } catch (error) {
+    next(error);
+  }
+}

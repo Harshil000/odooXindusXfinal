@@ -1,24 +1,24 @@
 // CREATE CATEGORY
-exports.CREATE_CATEGORY = `
+export const CREATE_CATEGORY = `
 INSERT INTO categories (restaurant_id, name)
 VALUES ($1, $2)
 RETURNING *;
 `;
 
 // GET ALL
-exports.GET_CATEGORIES = `
+export const GET_CATEGORIES = `
 SELECT * FROM categories
 ORDER BY name;
 `;
 
 // GET BY ID
-exports.GET_CATEGORY_BY_ID = `
+export const GET_CATEGORY_BY_ID = `
 SELECT * FROM categories
 WHERE id = $1;
 `;
 
 // UPDATE
-exports.UPDATE_CATEGORY = `
+export const UPDATE_CATEGORY = `
 UPDATE categories
 SET name = $1
 WHERE id = $2
@@ -26,7 +26,7 @@ RETURNING *;
 `;
 
 // DELETE
-exports.DELETE_CATEGORY = `
+export const DELETE_CATEGORY = `
 DELETE FROM categories
 WHERE id = $1;
 `;

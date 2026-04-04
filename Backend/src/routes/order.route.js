@@ -1,9 +1,12 @@
-const router = require("express").Router();
-const ctrl = require("../controllers/order.controller");
+import express from "express";
+import * as ctrl from "../controller/order.controller.js";
+import { verifyToken } from "../middleware/auth.middleware.js";
 
-router.post("/", ctrl.createOrder);
-router.get("/", ctrl.getOrders);
-router.put("/:id", ctrl.updateOrder);
-router.delete("/:id", ctrl.deleteOrder);
+const router = express.Router();
 
-module.exports = router;
+router.post("/", verifyToken, ctrl.createOrder);
+router.get("/", verifyToken, ctrl.getOrders);
+router.put("/:id", verifyToken, ctrl.updateOrder);
+router.delete("/:id", verifyToken, ctrl.deleteOrder);
+
+export default router;

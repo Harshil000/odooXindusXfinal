@@ -1,9 +1,12 @@
-const router = require("express").Router();
-const ctrl = require("../controllers/session.controller");
+import express from "express";
+import * as ctrl from "../controller/session.controller.js";
+import { verifyToken } from "../middleware/auth.middleware.js";
 
-router.post("/", ctrl.createSession);
-router.get("/active/:restaurant_id", ctrl.getActiveSession);
-router.put("/:id", ctrl.updateSession);
-router.get("/:restaurant_id", ctrl.getAllSessions);
+const router = express.Router();
 
-module.exports = router;
+router.post("/", verifyToken, ctrl.createSession);
+router.get("/active/:restaurant_id", verifyToken, ctrl.getActiveSession);
+router.put("/:id", verifyToken, ctrl.updateSession);
+router.get("/:restaurant_id", verifyToken, ctrl.getAllSessions);
+
+export default router;

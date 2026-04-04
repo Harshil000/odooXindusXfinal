@@ -4,10 +4,16 @@ import {
   SELECT_USER_BY_EMAIL_QUERY,
   INSERT_USER_QUERY,
   INSERT_RESTAURANT_QUERY,
-} from "../queries/user.queries.js";
+} from "../queries/user.query.js";
 
-export async function createUser({ name, email, password, role, restaurant_name }) {
-    const client = await pool.connect();
+export async function createUser({
+  name,
+  email,
+  password,
+  role,
+  restaurant_name,
+}) {
+  const client = await pool.connect();
   try {
     await client.query("BEGIN");
     const normalizedRole = role?.toLowerCase();
@@ -18,7 +24,10 @@ export async function createUser({ name, email, password, role, restaurant_name 
 
     let restaurant = null;
     if (normalizedRole === "owner") {
-      restaurant = await client.query(INSERT_RESTAURANT_QUERY, [restaurant_name, createdUser.id]);
+      restaurant = await client.query(INSERT_RESTAURANT_QUERY, [
+        restaurant_name,
+        createdUser.id,
+      ]);
     }
 
     await client.query("COMMIT");

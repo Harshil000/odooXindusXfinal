@@ -1,43 +1,52 @@
-const db = require("../config/db");
-const Q = require("../queries/floor.query");
+import * as repo from "../repository/floor.repository.js";
 
 // CREATE
-exports.createFloor = async (req, res) => {
-  const { restaurant_id, name } = req.body;
-
-  const result = await db.query(Q.CREATE_FLOOR, [
-    restaurant_id,
-    name,
-  ]);
-
-  res.status(201).json(result.rows[0]);
-};
+export async function createFloor(req, res, next) {
+  try {
+    const { restaurant_id, name } = req.body;
+    const floor = await repo.createFloor(restaurant_id, name);
+    res.status(201).json(floor);
+  } catch (error) {
+    next(error);
+  }
+}
 
 // GET ALL
-exports.getFloors = async (req, res) => {
-  const result = await db.query(Q.GET_FLOORS);
-  res.json(result.rows);
-};
+export async function getFloors(req, res, next) {
+  try {
+    const floors = await repo.getAllFloors();
+    res.json(floors);
+  } catch (error) {
+    next(error);
+  }
+}
 
 // GET ONE
-exports.getFloorById = async (req, res) => {
-  const result = await db.query(Q.GET_FLOOR_BY_ID, [
-    req.params.id,
-  ]);
-  res.json(result.rows[0]);
-};
+export async function getFloorById(req, res, next) {
+  try {
+    const floor = await repo.getFloorById(req.params.id);
+    res.json(floor);
+  } catch (error) {
+    next(error);
+  }
+}
 
 // UPDATE
-exports.updateFloor = async (req, res) => {
-  const result = await db.query(Q.UPDATE_FLOOR, [
-    req.body.name,
-    req.params.id,
-  ]);
-  res.json(result.rows[0]);
-};
+export async function updateFloor(req, res, next) {
+  try {
+    const floor = await repo.updateFloor(req.body.name, req.params.id);
+    res.json(floor);
+  } catch (error) {
+    next(error);
+  }
+}
 
 // DELETE
-exports.deleteFloor = async (req, res) => {
-  await db.query(Q.DELETE_FLOOR, [req.params.id]);
-  res.json({ message: "Floor deleted" });
-};
+export async function deleteFloor(req, res, next) {
+  try {
+    await repo.deleteFloor(req.params.id);
+    res.json({ message: "Floor deleted successfully" });
+  } catch (error) {
+    next(error);
+  }
+}

@@ -1,5 +1,14 @@
-const express = require("express");
-const cors = require("cors");
+import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import sessionRoute from "./routes/session.route.js";
+import orderRoute from "./routes/order.route.js";
+import orderItemRoute from "./routes/orderItem.route.js";
+import customerRoute from "./routes/customer.route.js";
+import categoryRoute from "./routes/category.route.js";
+import floorRoute from "./routes/floor.route.js";
+import authRoute from "./routes/auth.route.js";
+import { handleError } from "./middleware/error.middleware.js";
 
 const app = express();
 
@@ -8,6 +17,7 @@ const app = express();
 // =========================
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
 
 // =========================
 // HEALTH CHECK
@@ -20,29 +30,26 @@ app.get("/", (req, res) => {
 // ROUTES
 // =========================
 
+// Authentication
+app.use("/api/auth", authRoute);
+
 // Sessions
-app.use("/api/sessions", require("./routes/session.routes"));
+app.use("/api/sessions", sessionRoute);
 
 // Orders
-app.use("/api/orders", require("./routes/order.routes"));
+app.use("/api/orders", orderRoute);
 
 // Order Items
-app.use("/api/order-items", require("./routes/orderItem.routes"));
-
-// POS (FINAL BOSS API)
-app.use("/api/pos", require("./routes/pos.routes"));
+app.use("/api/order-items", orderItemRoute);
 
 // Customers
-app.use("/api/customers", require("./routes/customer.routes"));
-
-// Products
-app.use("/api/products", require("./routes/product.routes"));
+app.use("/api/customers", customerRoute);
 
 // Categories
-app.use("/api/categories", require("./routes/category.routes"));
+app.use("/api/categories", categoryRoute);
 
 // Floors
-app.use("/api/floors", require("./routes/floor.routes"));
+app.use("/api/floors", floorRoute);
 
 // =========================
 // 404 HANDLER
@@ -56,12 +63,6 @@ app.use((req, res) => {
 // =========================
 // GLOBAL ERROR HANDLER
 // =========================
-app.use((err, req, res, next) => {
-  console.error("🔥 Error:", err);
+app.use(handleError);
 
-  res.status(err.status || 500).json({
-    error: err.message || "Internal Server Error",
-  });
-});
-
-module.exports = app;
+export default app;

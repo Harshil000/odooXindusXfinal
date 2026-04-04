@@ -1,10 +1,13 @@
-const router = require("express").Router();
-const ctrl = require("../controllers/orderItem.controller");
+import express from "express";
+import * as ctrl from "../controller/orderItem.controller.js";
+import { verifyToken } from "../middleware/auth.middleware.js";
 
-router.post("/", ctrl.createOrderItem);
-router.get("/", ctrl.getOrderItems);
-router.get("/order/:order_id", ctrl.getItemsByOrder);
-router.put("/:id", ctrl.updateOrderItem);
-router.delete("/:id", ctrl.deleteOrderItem);
+const router = express.Router();
 
-module.exports = router;
+router.post("/", verifyToken, ctrl.createOrderItem);
+router.get("/", verifyToken, ctrl.getOrderItems);
+router.get("/order/:order_id", verifyToken, ctrl.getItemsByOrder);
+router.put("/:id", verifyToken, ctrl.updateOrderItem);
+router.delete("/:id", verifyToken, ctrl.deleteOrderItem);
+
+export default router;

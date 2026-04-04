@@ -1,10 +1,13 @@
-const router = require("express").Router();
-const ctrl = require("../controllers/category.controller");
+import express from "express";
+import * as ctrl from "../controller/category.controller.js";
+import { verifyToken } from "../middleware/auth.middleware.js";
 
-router.post("/", ctrl.createCategory);
+const router = express.Router();
+
+router.post("/", verifyToken, ctrl.createCategory);
 router.get("/", ctrl.getCategories);
 router.get("/:id", ctrl.getCategoryById);
-router.put("/:id", ctrl.updateCategory);
-router.delete("/:id", ctrl.deleteCategory);
+router.put("/:id", verifyToken, ctrl.updateCategory);
+router.delete("/:id", verifyToken, ctrl.deleteCategory);
 
-module.exports = router;
+export default router;

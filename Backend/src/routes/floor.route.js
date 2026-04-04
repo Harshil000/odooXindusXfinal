@@ -1,10 +1,13 @@
-const router = require("express").Router();
-const ctrl = require("../controllers/floor.controller");
+import express from "express";
+import * as ctrl from "../controller/floor.controller.js";
+import { verifyToken } from "../middleware/auth.middleware.js";
 
-router.post("/", ctrl.createFloor);
+const router = express.Router();
+
+router.post("/", verifyToken, ctrl.createFloor);
 router.get("/", ctrl.getFloors);
 router.get("/:id", ctrl.getFloorById);
-router.put("/:id", ctrl.updateFloor);
-router.delete("/:id", ctrl.deleteFloor);
+router.put("/:id", verifyToken, ctrl.updateFloor);
+router.delete("/:id", verifyToken, ctrl.deleteFloor);
 
-module.exports = router;
+export default router;

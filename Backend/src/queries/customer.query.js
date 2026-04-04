@@ -1,24 +1,24 @@
 // CREATE CUSTOMER
-exports.CREATE_CUSTOMER = `
+export const CREATE_CUSTOMER = `
 INSERT INTO customers (restaurant_id, name, email, phone)
 VALUES ($1, $2, $3, $4)
 RETURNING *;
 `;
 
 // GET ALL CUSTOMERS
-exports.GET_CUSTOMERS = `
+export const GET_CUSTOMERS = `
 SELECT * FROM customers
 ORDER BY created_at DESC;
 `;
 
 // GET SINGLE CUSTOMER
-exports.GET_CUSTOMER_BY_ID = `
+export const GET_CUSTOMER_BY_ID = `
 SELECT * FROM customers
 WHERE id = $1;
 `;
 
 // UPDATE CUSTOMER
-exports.UPDATE_CUSTOMER = `
+export const UPDATE_CUSTOMER = `
 UPDATE customers
 SET name = $1,
     email = $2,
@@ -28,7 +28,7 @@ RETURNING *;
 `;
 
 // DELETE CUSTOMER
-exports.DELETE_CUSTOMER = `
+export const DELETE_CUSTOMER = `
 DELETE FROM customers
 WHERE id = $1;
 `;

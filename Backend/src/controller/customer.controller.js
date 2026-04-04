@@ -1,78 +1,63 @@
-const db = require("../config/db");
-const Q = require("../queries/customer.query");
+import * as repo from "../repository/customer.repository.js";
 
 // CREATE CUSTOMER
-exports.createCustomer = async (req, res) => {
+export async function createCustomer(req, res, next) {
   try {
     const { restaurant_id, name, email, phone } = req.body;
-
-    const result = await db.query(Q.CREATE_CUSTOMER, [
+    const customer = await repo.createCustomer(
       restaurant_id,
       name,
       email,
       phone,
-    ]);
-
-    res.status(201).json(result.rows[0]);
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to create customer" });
+    );
+    res.status(201).json(customer);
+  } catch (error) {
+    next(error);
   }
-};
+}
 
 // GET ALL CUSTOMERS
-exports.getCustomers = async (req, res) => {
+export async function getCustomers(req, res, next) {
   try {
-    const result = await db.query(Q.GET_CUSTOMERS);
-    res.json(result.rows);
-
-  } catch (err) {
-    res.status(500).json({ error: "Failed to fetch customers" });
+    const customers = await repo.getAllCustomers();
+    res.json(customers);
+  } catch (error) {
+    next(error);
   }
-};
+}
 
 // GET CUSTOMER BY ID
-exports.getCustomerById = async (req, res) => {
+export async function getCustomerById(req, res, next) {
   try {
-    const result = await db.query(Q.GET_CUSTOMER_BY_ID, [
-      req.params.id,
-    ]);
-
-    res.json(result.rows[0]);
-
-  } catch (err) {
-    res.status(500).json({ error: "Failed to fetch customer" });
+    const customer = await repo.getCustomerById(req.params.id);
+    res.json(customer);
+  } catch (error) {
+    next(error);
   }
-};
+}
 
 // UPDATE CUSTOMER
-exports.updateCustomer = async (req, res) => {
+export async function updateCustomer(req, res, next) {
   try {
     const { name, email, phone } = req.body;
-
-    const result = await db.query(Q.UPDATE_CUSTOMER, [
+    const customer = await repo.updateCustomer(
       name,
       email,
       phone,
       req.params.id,
-    ]);
-
-    res.json(result.rows[0]);
-
-  } catch (err) {
-    res.status(500).json({ error: "Failed to update customer" });
+    );
+    res.json(customer);
+  } catch (error) {
+    next(error);
   }
-};
+}
 
 // DELETE CUSTOMER
-exports.deleteCustomer = async (req, res) => {
+export async function deleteCustomer(req, res, next) {
   try {
-    await db.query(Q.DELETE_CUSTOMER, [req.params.id]);
-
+    await repo.deleteCustomer(req.params.id);
     res.json({ message: "Customer deleted successfully" });
-
-  } catch (err) {
-    res.status(500).json({ error: "Failed to delete customer" });
+  } catch (error) {
+    next(error);
   }
-};
+}
