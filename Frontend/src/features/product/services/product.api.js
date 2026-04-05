@@ -69,3 +69,12 @@ export async function createCategory(data) {
     throw normalizeError(error);
   }
 }
+
+export async function updateCategory(id, data) {
+  try {
+    const response = await categoryApi.put(`/${id}`, data);
+    return response.data;
+  } catch (error) {
+    throw normalizeError(error);
+  }
+}

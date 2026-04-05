@@ -21,7 +21,12 @@ export async function getCategoryById(id, restaurant_id) {
 }
 
 export async function updateCategory(name, color, id, restaurant_id) {
-  const result = await pool.query(Q.UPDATE_CATEGORY, [name, color, id, restaurant_id]);
+  const result = await pool.query(Q.UPDATE_CATEGORY, [
+    name ?? null,
+    color ?? null,
+    id,
+    restaurant_id,
+  ]);
   return result.rows[0];
 }
 

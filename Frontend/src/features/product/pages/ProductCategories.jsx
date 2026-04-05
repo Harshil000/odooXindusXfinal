@@ -12,9 +12,12 @@ const COLOR_PRESETS = [
 ];
 
 const ProductCategories = () => {
-  const { categories, createNewCategory, saving, formError } = useProducts();
+  const { categories, createNewCategory, updateExistingCategory, saving, formError } = useProducts();
   const [name, setName] = useState("");
   const [color, setColor] = useState("#8b6f4e");
+  const [editingId, setEditingId] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [editColor, setEditColor] = useState("#8b6f4e");
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -22,6 +25,29 @@ const ProductCategories = () => {
     await createNewCategory({ name: name.trim(), color: color.trim() });
     setName("");
     setColor("#8b6f4e");
+  };
+
+  const startEdit = (category) => {
+    setEditingId(category.id);
+    setEditName(category.name || "");
+    setEditColor(category.color || "#8b6f4e");
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditName("");
+    setEditColor("#8b6f4e");
+  };
+
+  const saveEdit = async () => {
+    if (!editingId || !editName.trim() || !editColor.trim()) return;
+    const isUpdated = await updateExistingCategory(editingId, {
+      name: editName.trim(),
+      color: editColor.trim(),
+    });
+    if (isUpdated) {
+      cancelEdit();
+    }
   };
 
   return (
@@ -92,8 +118,52 @@ const ProductCategories = () => {
           <ul>
             {categories.map((category) => (
               <li key={category.id} className="category-list-item">
-                <span className="category-list-swatch" style={{ background: category.color || "#ffffff" }} />
-                <span>{category.name}</span>
+                {editingId === category.id ? (
+                  <>
+                    <span className="category-list-swatch" style={{ background: editColor || "#ffffff" }} />
+                    <input
+                      className="category-inline-name"
+                      value={editName}
+                      onChange={(event) => setEditName(event.target.value)}
+                      placeholder="Category name"
+                    />
+                    <input
+                      type="color"
+                      className="category-inline-color"
+                      value={editColor}
+                      onChange={(event) => setEditColor(event.target.value)}
+                      aria-label="Edit category color"
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-small"
+                      onClick={saveEdit}
+                      disabled={saving}
+                    >
+                      {saving ? "Saving..." : "Save"}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-small"
+                      onClick={cancelEdit}
+                      disabled={saving}
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <span className="category-list-swatch" style={{ background: category.color || "#ffffff" }} />
+                    <span>{category.name}</span>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-small"
+                      onClick={() => startEdit(category)}
+                    >
+                      Edit
+                    </button>
+                  </>
+                )}
               </li>
             ))}
           </ul>

@@ -6,6 +6,7 @@ import {
   deleteProduct,
   getCategories,
   createCategory,
+  updateCategory,
 } from "../services/product.api";
 import {
   initialProductState,
@@ -117,6 +118,25 @@ const useProducts = () => {
     }
   }, []);
 
+  const updateExistingCategory = useCallback(async (id, categoryData) => {
+    dispatch({ type: ProductActionTypes.UPDATE_START });
+    try {
+      const response = await updateCategory(id, categoryData);
+      dispatch({
+        type: ProductActionTypes.CATEGORY_UPDATE_SUCCESS,
+        payload: { category: response },
+      });
+      return true;
+    } catch (error) {
+      const message = error?.message || error?.error || "Could not update category";
+      dispatch({
+        type: ProductActionTypes.UPDATE_ERROR,
+        payload: message,
+      });
+      return false;
+    }
+  }, []);
+
   useEffect(() => {
     loadProducts();
     loadCategories();
@@ -130,6 +150,7 @@ const useProducts = () => {
     updateExistingProduct,
     deleteExistingProduct,
     createNewCategory,
+    updateExistingCategory,
   };
 };
 

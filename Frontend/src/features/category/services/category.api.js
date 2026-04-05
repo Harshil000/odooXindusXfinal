@@ -36,3 +36,12 @@ export async function deleteCategory(id) {
     throw normalizeError(error);
   }
 }
+
+export async function updateCategory(id, data) {
+  try {
+    const response = await api.put(`/${id}`, data);
+    return response.data;
+  } catch (error) {
+    throw normalizeError(error);
+  }
+}

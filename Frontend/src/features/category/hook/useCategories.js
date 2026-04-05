@@ -1,5 +1,5 @@
 import { useEffect, useReducer, useCallback } from "react";
-import { getCategories, createCategory, deleteCategory } from "../services/category.api";
+import { getCategories, createCategory, deleteCategory, updateCategory } from "../services/category.api";
 import { initialCategoryState, categoryReducer, CategoryActionTypes } from "../state/category.state";
 
 const useCategories = () => {
@@ -35,6 +35,18 @@ const useCategories = () => {
     }
   }, []);
 
+  const updateExistingCategory = useCallback(async (id, categoryData) => {
+    dispatch({ type: CategoryActionTypes.UPDATE_START });
+    try {
+      const response = await updateCategory(id, categoryData);
+      dispatch({ type: CategoryActionTypes.UPDATE_SUCCESS, payload: { category: response } });
+      return true;
+    } catch (error) {
+      dispatch({ type: CategoryActionTypes.UPDATE_ERROR, payload: error?.message || error?.error || "Could not update category" });
+      return false;
+    }
+  }, []);
+
   useEffect(() => {
     loadCategories();
   }, [loadCategories]);
@@ -44,6 +56,7 @@ const useCategories = () => {
     loadCategories,
     createNewCategory,
     deleteExistingCategory,
+    updateExistingCategory,
   };
 };
 

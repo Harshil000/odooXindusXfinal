@@ -48,19 +48,27 @@ export async function getCategoryById(req, res, next) {
 export async function updateCategory(req, res, next) {
   try {
     const { name, color } = req.body;
-    if (!name?.trim()) {
-      return res.status(400).json({ message: "Category name is required" });
+    const normalizedName = typeof name === "string" ? name.trim() : null;
+    const normalizedColor = typeof color === "string" ? color.trim() : null;
+
+    if (!normalizedName && !normalizedColor) {
+      return res.status(400).json({
+        message: "At least one field (name or color) is required",
+      });
     }
-    if (!color?.trim()) {
-      return res.status(400).json({ message: "Category color is required" });
-    }
+
     const restaurant_id = req.user.restaurant_id;
     const category = await repo.updateCategory(
-      name,
-      color.trim(),
+      normalizedName,
+      normalizedColor,
       req.params.id,
       restaurant_id,
     );
+
+    if (!category) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+
     res.json(category);
   } catch (error) {
     next(error);

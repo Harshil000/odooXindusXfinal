@@ -22,6 +22,7 @@ export const ProductActionTypes = {
   DELETE_SUCCESS: "DELETE_SUCCESS",
   DELETE_ERROR: "DELETE_ERROR",
   CATEGORY_CREATE_SUCCESS: "CATEGORY_CREATE_SUCCESS",
+  CATEGORY_UPDATE_SUCCESS: "CATEGORY_UPDATE_SUCCESS",
 };
 
 export const productReducer = (state, action) => {
@@ -71,6 +72,16 @@ export const productReducer = (state, action) => {
       return {
         ...state,
         categories: [action.payload.category, ...state.categories],
+      };
+    case ProductActionTypes.CATEGORY_UPDATE_SUCCESS:
+      return {
+        ...state,
+        saving: false,
+        categories: state.categories.map((category) =>
+          category.id === action.payload.category.id
+            ? action.payload.category
+            : category,
+        ),
       };
     case ProductActionTypes.CREATE_ERROR:
     case ProductActionTypes.UPDATE_ERROR:

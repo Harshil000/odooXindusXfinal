@@ -12,9 +12,12 @@ const COLOR_OPTIONS = [
 ];
 
 const Categories = () => {
-  const { categories, loading, error, saving, formError, createNewCategory, deleteExistingCategory } = useCategories();
+  const { categories, loading, error, saving, formError, createNewCategory, deleteExistingCategory, updateExistingCategory } = useCategories();
   const [name, setName] = useState("");
   const [color, setColor] = useState("white");
+  const [editingId, setEditingId] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [editColor, setEditColor] = useState("white");
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -22,6 +25,29 @@ const Categories = () => {
     await createNewCategory({ name: name.trim(), color });
     setName("");
     setColor("white");
+  };
+
+  const handleEditStart = (category) => {
+    setEditingId(category.id);
+    setEditName(category.name);
+    setEditColor(category.color || "white");
+  };
+
+  const handleEditCancel = () => {
+    setEditingId(null);
+    setEditName("");
+    setEditColor("white");
+  };
+
+  const handleEditSave = async () => {
+    if (!editName.trim()) return;
+    const isUpdated = await updateExistingCategory(editingId, {
+      name: editName.trim(),
+      color: editColor,
+    });
+    if (isUpdated) {
+      handleEditCancel();
+    }
   };
 
   return (
@@ -92,6 +118,13 @@ const Categories = () => {
                   </div>
                   <button
                     type="button"
+                    className="btn btn-secondary btn-small"
+                    onClick={() => handleEditStart(category)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
                     className="btn btn-danger btn-small"
                     onClick={() => deleteExistingCategory(category.id)}
                   >
@@ -103,6 +136,51 @@ const Categories = () => {
           )}
         </div>
       </section>
+
+      {editingId && (
+        <div className="modal-overlay" onClick={handleEditCancel}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Edit Category</h2>
+              <button className="btn-close" onClick={handleEditCancel}>×</button>
+            </div>
+            <form className="modal-body" onSubmit={(e) => { e.preventDefault(); handleEditSave(); }}>
+              <div className="category-form-field">
+                <label>Category Name</label>
+                <input
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="Category name"
+                  required
+                />
+              </div>
+              <div className="category-form-field">
+                <label>Color</label>
+                <div className="color-picker-grid">
+                  {COLOR_OPTIONS.map((option) => (
+                    <button
+                      type="button"
+                      key={option}
+                      className={`color-swatch ${editColor === option ? "selected" : ""}`}
+                      style={{ background: option }}
+                      onClick={() => setEditColor(option)}
+                    />
+                  ))}
+                </div>
+              </div>
+              {formError && <div className="form-error">{formError}</div>}
+              <div className="modal-footer">
+                <button type="button" className="btn btn-outline" onClick={handleEditCancel}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary" disabled={saving}>
+                  {saving ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </main>
   );
 };

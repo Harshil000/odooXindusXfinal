@@ -21,8 +21,8 @@ WHERE id = $1 AND restaurant_id = $2;
 // UPDATE
 export const UPDATE_CATEGORY = `
 UPDATE categories
-SET name = $1,
-    color = $2
+SET name = COALESCE($1, name),
+    color = COALESCE($2, color)
 WHERE id = $3 AND restaurant_id = $4
 RETURNING *;
 `;

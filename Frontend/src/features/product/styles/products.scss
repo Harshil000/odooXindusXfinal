@@ -322,6 +322,11 @@
   color: #fff;
 }
 
+.btn-small {
+  padding: 0.45rem 0.9rem;
+  font-size: 0.85rem;
+}
+
 .empty-state {
   color: #6b7280;
   padding: 1.5rem 0;
@@ -346,6 +351,23 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
+}
+
+.category-inline-name {
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 0.45rem 0.65rem;
+  min-width: 180px;
+}
+
+.category-inline-color {
+  width: 2.25rem;
+  height: 2rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.1rem;
+  background: #fff;
+  cursor: pointer;
 }
 
 .category-list-swatch {

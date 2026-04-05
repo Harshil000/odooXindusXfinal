@@ -13,6 +13,9 @@ export const CategoryActionTypes = {
   CREATE_START: "CREATE_START",
   CREATE_SUCCESS: "CREATE_SUCCESS",
   CREATE_ERROR: "CREATE_ERROR",
+  UPDATE_START: "UPDATE_START",
+  UPDATE_SUCCESS: "UPDATE_SUCCESS",
+  UPDATE_ERROR: "UPDATE_ERROR",
   DELETE_START: "DELETE_START",
   DELETE_SUCCESS: "DELETE_SUCCESS",
   DELETE_ERROR: "DELETE_ERROR",
@@ -35,6 +38,14 @@ export const categoryReducer = (state, action) => {
         saving: false,
         categories: [action.payload.category, ...state.categories],
       };
+    case CategoryActionTypes.UPDATE_SUCCESS:
+      return {
+        ...state,
+        saving: false,
+        categories: state.categories.map((category) =>
+          category.id === action.payload.category.id ? action.payload.category : category
+        ),
+      };
     case CategoryActionTypes.DELETE_SUCCESS:
       return {
         ...state,
@@ -42,6 +53,7 @@ export const categoryReducer = (state, action) => {
         categories: state.categories.filter((category) => category.id !== action.payload.id),
       };
     case CategoryActionTypes.CREATE_ERROR:
+    case CategoryActionTypes.UPDATE_ERROR:
     case CategoryActionTypes.DELETE_ERROR:
       return { ...state, saving: false, formError: action.payload };
     default:
