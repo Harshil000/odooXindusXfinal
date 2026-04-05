@@ -271,3 +271,91 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+.terminal-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: grid;
+  place-items: center;
+  z-index: 1200;
+  padding: 1rem;
+}
+
+.terminal-modal-card {
+  width: min(720px, 96vw);
+  max-height: 90vh;
+  overflow: auto;
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #e6dfd4;
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.2);
+  padding: 0.95rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.terminal-menu-modal {
+  width: min(860px, 98vw);
+}
+
+.terminal-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.terminal-modal-header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  color: #3f352b;
+}
+
+.terminal-close-btn {
+  border: 1px solid #d8c8b3;
+  background: #fff;
+  color: #5b4a37;
+  border-radius: 999px;
+  width: 1.7rem;
+  height: 1.7rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.terminal-modal-subtitle {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #6b6560;
+}
+
+.terminal-field {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.terminal-field span {
+  font-size: 0.8rem;
+  color: #6b6560;
+}
+
+.terminal-field input {
+  border: 1px solid #e1d5c6;
+  border-radius: 8px;
+  padding: 0.5rem 0.6rem;
+  font-size: 0.9rem;
+}
+
+.terminal-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.45rem;
+}
+
+.terminal-product-list {
+  max-height: 52vh;
+}
+
+.terminal-cart-summary {
+  font-size: 0.95rem;
+}

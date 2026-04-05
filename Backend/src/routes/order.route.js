@@ -9,5 +9,6 @@ router.get("/", verifyToken, ctrl.getOrders);
 router.get("/:id", verifyToken, ctrl.getOrderDetails);
 router.put("/:id", verifyToken, ctrl.updateOrder);
 router.delete("/:id", verifyToken, ctrl.deleteOrder);
+router.post("/sendReceipt", verifyToken, ctrl.sendReceipt);
 
 export default router;

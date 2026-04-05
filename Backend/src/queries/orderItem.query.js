@@ -14,7 +14,8 @@ SELECT * FROM order_items;
 export const GET_ITEMS_BY_ORDER = `
 SELECT
     oi.*,
-    p.name AS product_name
+    p.name AS product_name,
+    p.tax_percent
 FROM order_items oi
 LEFT JOIN products p ON p.id = oi.product_id
 WHERE oi.order_id = $1;

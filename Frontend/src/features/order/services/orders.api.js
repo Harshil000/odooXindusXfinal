@@ -46,3 +46,12 @@ export async function updateOrderStatus(orderId, status) {
     throw normalizeError(error);
   }
 }
+
+export async function sendOrderReceipt(data) {
+  try {
+    const response = await api.post("/sendReceipt", data);
+    return response.data;
+  } catch (error) {
+    throw normalizeError(error);
+  }
+}

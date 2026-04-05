@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import useTerminal from "../hook/useTerminal";
 import PaymentModal from "../components/PaymentModal";
+import MenuModal from "../components/MenuModal";
+import CustomerDetailsModal from "../components/CustomerDetailsModal";
+import { toast } from "react-toastify";
 import "../styles/terminal.scss";
 
 const Terminal = () => {
@@ -28,6 +31,9 @@ const Terminal = () => {
 
   const [selectedTableId, setSelectedTableId] = useState("");
   const [paymentModalTableId, setPaymentModalTableId] = useState(null);
+  const [menuTableId, setMenuTableId] = useState(null);
+  const [engageTableId, setEngageTableId] = useState(null);
+  const [customerByTable, setCustomerByTable] = useState({});
 
   useEffect(() => {
     if (!tables.length) {
@@ -45,6 +51,36 @@ const Terminal = () => {
     () => tables.find((item) => String(item.id) === String(selectedTableId)) || null,
     [selectedTableId, tables],
   );
+
+  const engageTable = (tableId) => {
+    const key = String(tableId);
+    const existing = customerByTable[key];
+    setSelectedTableId(key);
+
+    if (!existing?.name || !existing?.email) {
+      setEngageTableId(tableId);
+      return;
+    }
+
+    setMenuTableId(tableId);
+  };
+
+  const handleConfirmCustomer = ({ name, email }) => {
+    if (!name || !email) {
+      toast.error("Customer name and email are required");
+      return;
+    }
+
+    const currentTableId = engageTableId;
+    if (!currentTableId) return;
+
+    setCustomerByTable((prev) => ({
+      ...prev,
+      [String(currentTableId)]: { name, email },
+    }));
+    setEngageTableId(null);
+    setMenuTableId(currentTableId);
+  };
 
   return (
     <main className="terminal-page">
@@ -80,7 +116,8 @@ const Terminal = () => {
               || "";
 
             const placeOrderDisabled = !activeSession || busy || cartItems.length === 0;
-            const paymentDisabled = busy || unpaidCount === 0;
+            const hasCustomerEmail = Boolean(customerByTable[String(table.id)]?.email);
+            const paymentDisabled = busy || unpaidCount === 0 || !hasCustomerEmail;
             const releaseDisabled = busy || table.status === "available";
 
             let disableReason = "";
@@ -100,11 +137,11 @@ const Terminal = () => {
                 className={`table-card ${table.status} ${isSelected ? "selected" : ""}`}
                 role="button"
                 tabIndex={0}
-                onClick={() => setSelectedTableId(String(table.id))}
+                onClick={() => engageTable(table.id)}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" || event.key === " ") {
                     event.preventDefault();
-                    setSelectedTableId(String(table.id));
+                    engageTable(table.id);
                   }
                 }}
               >
@@ -115,57 +152,21 @@ const Terminal = () => {
 
                 <p>Seats: {table.seats || 0}</p>
                 <p>Unpaid Orders: {unpaidCount}</p>
+                {customerByTable[String(table.id)] ? (
+                  <p>
+                    Customer: {customerByTable[String(table.id)]?.name}
+                  </p>
+                ) : (
+                  <p className="table-select-note">Tap table to add customer details and open menu.</p>
+                )}
 
                 {!isSelected ? (
                   <p className="table-select-note">Select this table to view cart and actions.</p>
                 ) : (
                   <>
-                <div className="products-section">
-                  <h3>Cart Builder</h3>
-                  <div className="product-list">
-                    {products.length === 0 ? (
-                      <p className="no-products">No active products available</p>
-                    ) : products.map((product) => {
-                      const qty = Number(cartByTable?.[table.id]?.[product.id] || 0);
-                      return (
-                        <div key={product.id} className="product-row">
-                          <div>
-                            <strong>{product.name}</strong>
-                            <small>₹{Number(product.price || 0).toFixed(2)}</small>
-                          </div>
-                          <div className="qty-controls">
-                            <button
-                              type="button"
-                              className="qty-btn"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                decrementProduct(table.id, product.id);
-                              }}
-                              disabled={busy || qty === 0}
-                            >
-                              -
-                            </button>
-                            <span>{qty}</span>
-                            <button
-                              type="button"
-                              className="qty-btn"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                incrementProduct(table.id, product.id);
-                              }}
-                              disabled={busy}
-                            >
-                              +
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <div className="cart-summary">
-                    <span>{cartItems.length} item(s)</span>
-                    <strong>₹{cartTotal.toFixed(2)}</strong>
-                  </div>
+                <div className="cart-summary">
+                  <span>{cartItems.length} item(s)</span>
+                  <strong>INR {cartTotal.toFixed(2)}</strong>
                 </div>
 
                 <div className="pay-order-select-wrap">
@@ -198,13 +199,18 @@ const Terminal = () => {
                   <button
                     type="button"
                     className="btn btn-primary"
-                    disabled={placeOrderDisabled}
+                    disabled={busy || !activeSession}
                     onClick={(event) => {
                       event.stopPropagation();
-                      createOrderForTable(table.id);
+                      const existing = customerByTable[String(table.id)];
+                      if (!existing?.name || !existing?.email) {
+                        setEngageTableId(table.id);
+                        return;
+                      }
+                      setMenuTableId(table.id);
                     }}
                   >
-                    {busy ? "Working..." : "Place Order"}
+                    Open Menu
                   </button>
 
                   <button
@@ -213,6 +219,10 @@ const Terminal = () => {
                     disabled={paymentDisabled}
                     onClick={(event) => {
                       event.stopPropagation();
+                      if (!hasCustomerEmail) {
+                        setEngageTableId(table.id);
+                        return;
+                      }
                       setPaymentModalTableId(table.id);
                     }}
                   >
@@ -231,6 +241,9 @@ const Terminal = () => {
                     Release Table
                   </button>
                 </div>
+                {!hasCustomerEmail && unpaidCount > 0 ? (
+                  <p className="terminal-note">Add customer email to enable payment and auto receipt.</p>
+                ) : null}
                   </>
                 )}
               </article>
@@ -249,8 +262,35 @@ const Terminal = () => {
         amount={paymentModalTableId !== null ? getSelectedUnpaidOrderAmount(paymentModalTableId) : 0}
         busy={actionTableId === paymentModalTableId}
         onClose={() => setPaymentModalTableId(null)}
-        onPayByCash={payByCashForTableOrder}
-        onPayByNetbanking={payByNetbankingForTableOrder}
+        onPayByCash={(tableId) => payByCashForTableOrder(tableId, customerByTable[String(tableId)]?.email)}
+        onPayByNetbanking={(tableId) => payByNetbankingForTableOrder(tableId, customerByTable[String(tableId)]?.email)}
+      />
+
+      <MenuModal
+        isOpen={menuTableId !== null}
+        table={tables.find((item) => String(item.id) === String(menuTableId)) || null}
+        products={products}
+        cartByTable={cartByTable}
+        busy={actionTableId === menuTableId}
+        activeSession={Boolean(activeSession)}
+        onClose={() => setMenuTableId(null)}
+        onIncrement={incrementProduct}
+        onDecrement={decrementProduct}
+        onPlaceOrder={async (tableId) => {
+          await createOrderForTable(tableId);
+          setMenuTableId(null);
+        }}
+        getCartItemsForTable={getCartItemsForTable}
+        getCartTotalForTable={getCartTotalForTable}
+      />
+
+      <CustomerDetailsModal
+        isOpen={engageTableId !== null}
+        tableNumber={tables.find((item) => String(item.id) === String(engageTableId))?.table_number || ""}
+        initialName={engageTableId ? customerByTable[String(engageTableId)]?.name : ""}
+        initialEmail={engageTableId ? customerByTable[String(engageTableId)]?.email : ""}
+        onClose={() => setEngageTableId(null)}
+        onConfirm={handleConfirmCustomer}
       />
     </main>
   );

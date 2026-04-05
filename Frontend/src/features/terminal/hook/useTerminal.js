@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getActiveSession } from "../../session/services/Session.api";
 import { getTables, releaseTable } from "../../setting/services/table.api";
-import { createOrder, getOrderDetails, getOrders } from "../../order/services/orders.api";
+import { createOrder, getOrderDetails, getOrders, sendOrderReceipt } from "../../order/services/orders.api";
 import { getProducts } from "../../product/services/product.api";
 import { createOrderItem } from "../../order/services/orderItems.api";
 import {
@@ -16,6 +16,8 @@ const getErrorMessage = (requestError, fallback) => (
   || requestError?.error
   || fallback
 );
+
+const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || "").trim());
 
 const useTerminal = () => {
   const [activeSession, setActiveSession] = useState(null);
@@ -233,7 +235,7 @@ const useTerminal = () => {
     }));
   }, []);
 
-  const payByCashForTableOrder = useCallback(async (tableId) => {
+  const payByCashForTableOrder = useCallback(async (tableId, receiptEmail) => {
     if (paymentInFlight.current.has(tableId)) return;
 
     paymentInFlight.current.add(tableId);
@@ -267,6 +269,21 @@ const useTerminal = () => {
         order_id: selected.id,
       });
 
+      if (isValidEmail(receiptEmail)) {
+        try {
+          await sendOrderReceipt({
+            orderId: selected.id,
+            userEmail: String(receiptEmail).trim(),
+          });
+          toast.success("Payment successful and receipt sent");
+        } catch (mailError) {
+          console.warn("Receipt email failed:", mailError);
+          toast.warning("Payment done, but receipt email failed");
+        }
+      } else {
+        toast.success("Payment successful");
+      }
+
       console.log("[payByCashForTableOrder] Cash payment successful, updating order status");
       setOrders((prev) => prev.map((item) => (
         item.id === selected.id ? { ...item, status: "paid" } : item
@@ -290,7 +307,7 @@ const useTerminal = () => {
     }
   }, [unpaidOrdersByTable, selectedUnpaidOrderByTable]);
 
-  const payByNetbankingForTableOrder = useCallback(async (tableId) => {
+  const payByNetbankingForTableOrder = useCallback(async (tableId, receiptEmail) => {
     if (paymentInFlight.current.has(tableId)) return;
 
     paymentInFlight.current.add(tableId);
@@ -380,6 +397,21 @@ const useTerminal = () => {
 
         instance.open();
       });
+
+      if (isValidEmail(receiptEmail)) {
+        try {
+          await sendOrderReceipt({
+            orderId: selected.id,
+            userEmail: String(receiptEmail).trim(),
+          });
+          toast.success("Payment successful and receipt sent");
+        } catch (mailError) {
+          console.warn("Receipt email failed:", mailError);
+          toast.warning("Payment done, but receipt email failed");
+        }
+      } else {
+        toast.success("Payment successful");
+      }
 
       console.log("[payByNetbankingForTableOrder] Payment completed, updating order status");
       setOrders((prev) => prev.map((item) => (

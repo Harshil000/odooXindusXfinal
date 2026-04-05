@@ -2,6 +2,7 @@ import * as repo from "../repository/order.repository.js";
 import * as itemRepo from "../repository/orderItem.repository.js";
 import * as tableRepo from "../repository/table.repository.js";
 import { emitToRestaurantAndTable } from "../socket/socket.js";
+import { buildReceiptWithItemTax, sendReceiptEmail } from "../service/receipt.service.js";
 
 const KITCHEN_STATUSES = ["to_cook", "preparing", "completed"];
 
@@ -139,6 +140,49 @@ export async function updateKitchenOrderStatus(req, res, next) {
     emitToRestaurantAndTable(restaurant_id, order.table_id, "order.status_changed", payload);
 
     res.json(order);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function sendReceipt(req, res, next) {
+  try {
+    const restaurant_id = req.user?.restaurant_id;
+    const { orderId, userEmail, itemTaxes } = req.body;
+
+    if (!restaurant_id) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    if (!orderId || !userEmail) {
+      return res.status(400).json({ message: "orderId and userEmail are required in req.body" });
+    }
+
+    const order = await repo.getOrderById(orderId, restaurant_id);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    const items = await itemRepo.getItemsByOrder(orderId);
+    const restaurant = await repo.getRestaurantById(restaurant_id);
+
+    const receipt = buildReceiptWithItemTax({
+      order,
+      restaurantName: restaurant?.name,
+      items,
+      itemTaxes,
+    });
+
+    await sendReceiptEmail({
+      toEmail: userEmail,
+      restaurantName: receipt.restaurantName,
+      receipt,
+    });
+
+    res.status(200).json({
+      message: "Bill generated and emailed successfully",
+      receipt,
+    });
   } catch (error) {
     next(error);
   }

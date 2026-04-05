@@ -96,3 +96,10 @@ WHERE restaurant_id = $1
 	AND session_id = $2
 	AND status <> 'paid';
 `;
+
+export const GET_RESTAURANT_BY_ID = `
+SELECT id, name
+FROM restaurants
+WHERE id = $1
+LIMIT 1;
+`;

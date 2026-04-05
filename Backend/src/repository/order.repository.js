@@ -53,3 +53,8 @@ export async function countUnpaidOrdersBySession(restaurant_id, session_id) {
   const result = await pool.query(Q.COUNT_UNPAID_ORDERS_BY_SESSION, [restaurant_id, session_id]);
   return result.rows[0]?.count || 0;
 }
+
+export async function getRestaurantById(restaurant_id) {
+  const result = await pool.query(Q.GET_RESTAURANT_BY_ID, [restaurant_id]);
+  return result.rows[0] || null;
+}
