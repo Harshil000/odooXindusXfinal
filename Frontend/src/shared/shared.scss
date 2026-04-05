@@ -31,6 +31,13 @@ body {
     --shadow-lg: 0 4px 16px rgba(61, 59, 56, 0.12);
     --radius: 8px;
     --radius-lg: 12px;
+    --btn-primary-bg: var(--accent);
+    --btn-primary-text: #FFFFFF;
+    --btn-primary-hover: var(--accent-hover);
+    --btn-secondary-bg: var(--bg-accent);
+    --btn-secondary-text: var(--text-primary);
+    --btn-danger-bg: var(--accent-hover);
+    --btn-danger-text: #FFFFFF;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -60,4 +67,40 @@ a:hover {
     flex: 1;
     min-height: 0;
     overflow: hidden;
+}
+
+.btn {
+    border: none;
+    border-radius: 999px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-primary {
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-text);
+}
+
+.btn-primary:hover {
+    background: var(--btn-primary-hover);
+}
+
+.btn-secondary {
+    background: var(--btn-secondary-bg);
+    color: var(--btn-secondary-text);
+}
+
+.btn-secondary:hover {
+    background: #e9dfd2;
+}
+
+.btn-danger {
+    background: var(--btn-danger-bg);
+    color: var(--btn-danger-text);
+}
+
+.btn-danger:hover {
+    background: #6b5239;
 }

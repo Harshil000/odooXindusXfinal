@@ -40,10 +40,10 @@
         }
 
         .session-btn--danger {
-            background: #b42318;
+            background: var(--accent-hover);
 
             &:hover:not(:disabled) {
-                background: #9a2116;
+                background: #6b5239;
             }
         }
     }

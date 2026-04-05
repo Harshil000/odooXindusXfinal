@@ -61,7 +61,7 @@
 
 .payment-total {
   font-size: 1.25rem;
-  color: #8b5cf6;
+  color: var(--accent);
   font-weight: 700;
 }
 
@@ -85,7 +85,7 @@
 
 .payment-method:hover,
 .payment-method:focus {
-  border-color: #a78bfa;
+  border-color: var(--accent);
   transform: translateY(-2px);
 }
 
@@ -127,13 +127,13 @@
 }
 
 .payment-summary-item {
-  background: #f8f5ff;
+  background: var(--bg-accent);
   border-radius: 16px;
   padding: 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  color: #3730a3;
+  color: var(--text-primary);
 }
 
 .payment-category {
@@ -150,7 +150,7 @@
 
 .payment-category-total {
   font-weight: 700;
-  color: #1d4ed8;
+  color: var(--accent);
 }
 
 .payment-history-table {
@@ -171,7 +171,7 @@
 }
 
 .payment-history-table tbody tr:hover {
-  background: #f8fafc;
+  background: var(--bg-accent);
 }
 
 .payment-note {
@@ -232,7 +232,7 @@
 .amount-label {
   font-size: 1.35rem;
   font-weight: 700;
-  color: #8b5cf6;
+  color: var(--accent);
   text-align: center;
 }
 
@@ -251,11 +251,11 @@
 }
 
 .btn-success {
-  background: #22c55e;
+  background: var(--accent);
   color: #fff;
 }
 
 .btn-secondary {
-  background: #f8fafc;
-  color: #111827;
+  background: var(--bg-accent);
+  color: var(--text-primary);
 }
