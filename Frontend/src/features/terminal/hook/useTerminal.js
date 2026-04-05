@@ -25,14 +25,22 @@ const getErrorMessage = (requestError, fallback) => (
 
 const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || "").trim());
 
+const roundCurrency = (value) => {
+  const numeric = Number(value || 0);
+  if (!Number.isFinite(numeric)) return 0;
+  return Math.round((numeric + Number.EPSILON) * 100) / 100;
+};
+
 const calculatePayableAmountFromItems = (items = []) => {
-  return items.reduce((sum, item) => {
-    const subtotal = Number(item?.subtotal || 0);
+  const amount = items.reduce((sum, item) => {
+    const subtotal = roundCurrency(item?.subtotal || 0);
     const taxPercent = Number(item?.tax_percent || 0);
     const safeTaxPercent = Number.isFinite(taxPercent) && taxPercent > 0 ? taxPercent : 0;
-    const lineTax = (subtotal * safeTaxPercent) / 100;
+    const lineTax = roundCurrency((subtotal * safeTaxPercent) / 100);
     return sum + subtotal + lineTax;
   }, 0);
+
+  return roundCurrency(amount);
 };
 
 const useTerminal = () => {
@@ -282,7 +290,7 @@ const useTerminal = () => {
     }));
   }, []);
 
-  const payByCashForTableOrder = useCallback(async (tableId, receiptEmail) => {
+  const payByCashForTableOrder = useCallback(async (tableId, customerDetails) => {
     if (paymentInFlight.current.has(tableId)) return;
 
     paymentInFlight.current.add(tableId);
@@ -321,11 +329,12 @@ const useTerminal = () => {
         ...amountMap,
       }));
 
+      const receiptEmail = String(customerDetails?.email || "").trim();
       if (isValidEmail(receiptEmail)) {
         try {
           await sendCombinedOrderReceipt({
             orderIds,
-            userEmail: String(receiptEmail).trim(),
+            userEmail: receiptEmail,
           });
           toast.success("All orders paid and combined receipt sent");
         } catch (mailError) {
@@ -366,7 +375,7 @@ const useTerminal = () => {
     }
   }, [unpaidOrdersByTable]);
 
-  const payByNetbankingForTableOrder = useCallback(async (tableId, receiptEmail) => {
+  const payByNetbankingForTableOrder = useCallback(async (tableId, customerDetails) => {
     if (paymentInFlight.current.has(tableId)) return;
 
     paymentInFlight.current.add(tableId);
@@ -463,11 +472,12 @@ const useTerminal = () => {
 
       await Promise.all(orderIds.map((orderId) => updateOrderStatus(orderId, "paid")));
 
+      const receiptEmail = String(customerDetails?.email || "").trim();
       if (isValidEmail(receiptEmail)) {
         try {
           await sendCombinedOrderReceipt({
             orderIds,
-            userEmail: String(receiptEmail).trim(),
+            userEmail: receiptEmail,
           });
           toast.success("All orders paid and combined receipt sent");
         } catch (mailError) {

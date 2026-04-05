@@ -3,6 +3,7 @@ import * as tableRepo from "../repository/table.repository.js";
 import * as orderRepo from "../repository/order.repository.js";
 
 const TRACK_STATUSES = ["to_cook", "preparing", "completed"];
+const PUBLIC_TRACK_BASE_URL = process.env.PUBLIC_TRACK_BASE_URL || "http://localhost:5173";
 
 export async function generateTrackToken(req, res, next) {
   try {
@@ -28,7 +29,7 @@ export async function generateTrackToken(req, res, next) {
     res.json({
       token,
       table,
-      track_url: `http://localhost:5173/track/${token}`,
+      track_url: `${PUBLIC_TRACK_BASE_URL}/track/${token}`,
     });
   } catch (error) {
     next(error);

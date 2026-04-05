@@ -52,6 +52,10 @@ const TrackOrder = () => {
 
     const socket = getSocket();
 
+    if (!socket.connected) {
+      socket.connect();
+    }
+
     const joinTableRoom = () => {
       socket.emit("join.table", { tableId });
     };
@@ -62,13 +66,19 @@ const TrackOrder = () => {
 
     const onOrderCreated = () => loadTrackData(false);
     const onOrderStatusChanged = () => loadTrackData(false);
+    const onReconnect = () => {
+      joinTableRoom();
+      loadTrackData(false);
+    };
 
     socket.on("connect", joinTableRoom);
+    socket.on("reconnect", onReconnect);
     socket.on("order.created", onOrderCreated);
     socket.on("order.status_changed", onOrderStatusChanged);
 
     return () => {
       socket.off("connect", joinTableRoom);
+      socket.off("reconnect", onReconnect);
       socket.off("order.created", onOrderCreated);
       socket.off("order.status_changed", onOrderStatusChanged);
     };
@@ -82,6 +92,46 @@ const TrackOrder = () => {
     }, 10000);
 
     return () => window.clearInterval(timer);
+  }, [token, loadTrackData]);
+
+  useEffect(() => {
+    if (!token) return undefined;
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        const socket = getSocket();
+        if (!socket.connected) {
+          socket.connect();
+        }
+        loadTrackData(false);
+      }
+    };
+
+    const onFocus = () => {
+      const socket = getSocket();
+      if (!socket.connected) {
+        socket.connect();
+      }
+      loadTrackData(false);
+    };
+
+    const onOnline = () => {
+      const socket = getSocket();
+      if (!socket.connected) {
+        socket.connect();
+      }
+      loadTrackData(false);
+    };
+
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("online", onOnline);
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("online", onOnline);
+    };
   }, [token, loadTrackData]);
 
   const sortedOrders = useMemo(

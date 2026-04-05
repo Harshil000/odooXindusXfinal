@@ -16,9 +16,19 @@ import {
 // Create Razorpay Order
 export const createRazorpayOrder = async (amount, currency = "INR") => {
   try {
-    console.log("[createRazorpayOrder] Creating order with amount:", amount, "currency:", currency);
+    const numericAmount = Number(amount || 0);
+    const paiseAmount = Math.round(numericAmount * 100);
+
+    if (!Number.isFinite(paiseAmount) || paiseAmount <= 0) {
+      return {
+        success: false,
+        error: "Invalid amount. Expected a positive number.",
+      };
+    }
+
+    console.log("[createRazorpayOrder] Creating order with amount:", numericAmount, "currency:", currency, "paise:", paiseAmount);
     const order = await razorpayInstance.orders.create({
-      amount: amount * 100, // Razorpay expects amount in paise
+      amount: paiseAmount, // Razorpay expects integer paise
       currency,
       receipt: `receipt_${Date.now()}`,
     });
