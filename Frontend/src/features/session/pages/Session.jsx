@@ -1,8 +1,13 @@
 import { useSessions } from "../hook/useSessions";
 import NoSession from "../components/NoSession";
+import { useContext } from "react";
+import { AuthContext } from "../../auth/auth.context";
 import "./Session.scss";
 
 const Session = () => {
+    const { user } = useContext(AuthContext);
+    const isOwner = String(user?.role || "").toLowerCase() === "owner";
+
     const {
         sessions,
         loading,
@@ -75,13 +80,17 @@ const Session = () => {
                     <button
                         type="button"
                         className="session-btn"
-                        disabled={actionLoading}
+                        disabled={actionLoading || !isOwner}
                         onClick={handleStartSession}
                     >
                         {actionLoading ? "Starting..." : "Start New Session"}
                     </button>
                 )}
             </header>
+
+            {!isOwner ? (
+                <p className="session-status-text">Only owner can start a new session.</p>
+            ) : null}
 
             {error && <p className="session-status-text session-status-text--error">{error}</p>}
 

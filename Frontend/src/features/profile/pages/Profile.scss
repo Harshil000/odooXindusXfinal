@@ -1,0 +1,90 @@
+.profile-page {
+  padding: 1rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.profile-header h1 {
+  margin: 0;
+}
+
+.profile-header p {
+  margin: 0.35rem 0 0;
+  color: #6f655c;
+}
+
+.profile-card {
+  background: #fff;
+  border: 1px solid #e8dfd6;
+  border-radius: 14px;
+  padding: 1rem;
+  display: flex;
+  gap: 0.9rem;
+  align-items: center;
+}
+
+.profile-avatar {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: #efe3d2;
+  color: #5a452f;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 1.3rem;
+}
+
+.profile-main h2 {
+  margin: 0;
+}
+
+.profile-main p {
+  margin: 0.3rem 0;
+  color: #6f655c;
+}
+
+.profile-role {
+  display: inline-block;
+  background: #f4ece2;
+  color: #5a452f;
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.75rem;
+  text-transform: capitalize;
+  font-weight: 700;
+}
+
+.profile-meta {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.profile-meta h3 {
+  margin: 0;
+}
+
+.profile-meta button {
+  border: 1px solid #eadfce;
+  background: #fffcf7;
+  border-radius: 10px;
+  padding: 0.75rem;
+  text-align: left;
+  display: grid;
+  gap: 0.15rem;
+  cursor: pointer;
+}
+
+.profile-meta button span {
+  font-size: 0.75rem;
+  color: #7f7368;
+}
+
+.profile-meta button strong {
+  color: #413325;
+}
+
+.profile-meta button small {
+  color: #8e7f72;
+  font-size: 0.72rem;
+}

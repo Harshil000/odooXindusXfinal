@@ -19,6 +19,8 @@ import Kitchen from "./features/kitchen/pages/Kitchen";
 import CustomerDisplay from "./features/customerDisplay/pages/CustomerDisplay";
 import TrackOrder from "./features/customerView/pages/TrackOrder";
 import Terminal from "./features/terminal/pages/Terminal";
+import OwnerOnly from "./shared/OwnerOnly";
+import Profile from "./features/profile/pages/Profile";
 
 const router = createBrowserRouter([
   {
@@ -47,7 +49,15 @@ const router = createBrowserRouter([
       },
       {
         path: "settings",
-        element: <Setting />,
+        element: (
+          <OwnerOnly>
+            <Setting />
+          </OwnerOnly>
+        ),
+      },
+      {
+        path: "profile",
+        element: <Profile />,
       },
       {
         path: "products",

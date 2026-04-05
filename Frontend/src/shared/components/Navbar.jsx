@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import useAuth from "../../features/auth/hook/useAuth";
+import { toast } from "react-toastify";
 import "./Navbar.scss";
 
 const navItems = [
@@ -26,6 +27,7 @@ const navItems = [
 ];
 
 const actionItems = [
+    { label: "Profile", to: "/profile" },
     { label: "Settings", to: "/settings" },
     { label: "Kitchen Display", to: "/kitchen" },
     { label: "Customer Display", to: "/customer-display" },
@@ -35,6 +37,25 @@ const actionItems = [
 const Navbar = () => {
 
     const { LogoutUser, user } = useAuth();
+    const isOwner = String(user?.role || "").toLowerCase() === "owner";
+    const filteredActionItems = actionItems.filter((item) => {
+        if (item.label === "Settings" && !isOwner) return false;
+        return true;
+    });
+
+    const copyField = async (label, value) => {
+        if (!value) {
+            toast.error(`${label} not available`);
+            return;
+        }
+
+        try {
+            await navigator.clipboard.writeText(String(value));
+            toast.success(`${label} copied`);
+        } catch {
+            toast.error(`Could not copy ${label.toLowerCase()}`);
+        }
+    };
 
     return (
         <header className="navbar-shell">
@@ -67,7 +88,7 @@ const Navbar = () => {
                             &#8942;
                         </button>
                         <div className="menu-dots-dropdown">
-                            {actionItems.map((item) => (
+                            {filteredActionItems.map((item) => (
                                 item.label === "Logout" ? (
                                     <button
                                         key={item.to}
@@ -87,6 +108,16 @@ const Navbar = () => {
                     <div className="navbar-user">
                         <div className="user-avatar">{user?.name?.[0]?.toUpperCase() || "U"}</div>
                         <span className="user-display">{user?.name || "User"}</span>
+                        <div className="user-hover-card">
+                            <button type="button" onClick={() => copyField("Restaurant Name", user?.restaurant_name)}>
+                                <span>Restaurant Name</span>
+                                <strong>{user?.restaurant_name || "-"}</strong>
+                            </button>
+                            <button type="button" onClick={() => copyField("Restaurant ID", user?.restaurant_id)}>
+                                <span>Restaurant ID</span>
+                                <strong>{user?.restaurant_id || "-"}</strong>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </nav>

@@ -18,15 +18,18 @@ LIMIT 1;
 `;
 
 export const SELECT_USER_BY_EMAIL_QUERY = `
-SELECT id, restaurant_id, name, email, password AS password_hash, role
+SELECT u.id, u.restaurant_id, u.name, u.email, u.password AS password_hash, u.role, r.name AS restaurant_name
 FROM users
-WHERE email = $1
+u
+LEFT JOIN restaurants r ON r.id = u.restaurant_id
+WHERE u.email = $1
 LIMIT 1;
 `;
 
 export const SELECT_USER_BY_ID_QUERY = `
-SELECT id, restaurant_id, name, email, role
-FROM users
-WHERE id = $1
+SELECT u.id, u.restaurant_id, u.name, u.email, u.role, r.name AS restaurant_name
+FROM users u
+LEFT JOIN restaurants r ON r.id = u.restaurant_id
+WHERE u.id = $1
 LIMIT 1;
 `;

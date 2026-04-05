@@ -184,6 +184,16 @@
                 @include flex-center(flex-start, center);
                 gap: 0.6rem;
                 padding: 0.3rem 0;
+                position: relative;
+
+                &:hover,
+                &:focus-within {
+                    .user-hover-card {
+                        opacity: 1;
+                        visibility: visible;
+                        transform: translateY(0);
+                    }
+                }
 
                 .user-avatar {
                     width: 34px;
@@ -199,6 +209,52 @@
                 .user-display {
                     font-size: 1rem;
                     color: var(--text-secondary);
+                }
+
+                .user-hover-card {
+                    position: absolute;
+                    top: calc(100% + 0.45rem);
+                    right: 0;
+                    min-width: 250px;
+                    padding: 0.45rem;
+                    border: 1px solid var(--border);
+                    border-radius: var(--radius-lg);
+                    background: var(--bg-secondary);
+                    box-shadow: var(--shadow-lg);
+                    display: grid;
+                    gap: 0.28rem;
+                    opacity: 0;
+                    visibility: hidden;
+                    transform: translateY(8px);
+                    transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease;
+                    z-index: 22;
+
+                    button {
+                        width: 100%;
+                        border: 1px solid var(--border);
+                        border-radius: calc(var(--radius) - 2px);
+                        background: var(--bg-primary);
+                        padding: 0.55rem 0.65rem;
+                        text-align: left;
+                        cursor: pointer;
+                        display: grid;
+                        gap: 0.12rem;
+
+                        &:hover {
+                            background: var(--bg-accent);
+                        }
+                    }
+
+                    span {
+                        font-size: 0.72rem;
+                        color: var(--text-secondary);
+                    }
+
+                    strong {
+                        font-size: 0.85rem;
+                        color: var(--text-primary);
+                        word-break: break-word;
+                    }
                 }
             }
         }

@@ -15,6 +15,10 @@ async function resolveRestaurantId(req) {
 // CREATE
 export async function createSession(req, res, next) {
   try {
+    if (String(req.user?.role || "").toLowerCase() !== "owner") {
+      return res.status(403).json({ message: "Only owner can start a session" });
+    }
+
     const restaurant_id = await resolveRestaurantId(req);
     if (!restaurant_id) {
       return res.status(400).json({ message: "Restaurant id missing for user" });
