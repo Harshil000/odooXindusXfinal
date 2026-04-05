@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import useTerminal from "../hook/useTerminal";
+import PaymentModal from "../components/PaymentModal";
 import "../styles/terminal.scss";
 
 const Terminal = () => {
@@ -21,11 +22,12 @@ const Terminal = () => {
     selectUnpaidOrderForTable,
     payByCashForTableOrder,
     payByNetbankingForTableOrder,
+    getSelectedUnpaidOrderAmount,
     releaseTableSafely,
   } = useTerminal();
 
   const [selectedTableId, setSelectedTableId] = useState("");
-  const [paymentMenuTableId, setPaymentMenuTableId] = useState(null);
+  const [paymentModalTableId, setPaymentModalTableId] = useState(null);
 
   useEffect(() => {
     if (!tables.length) {
@@ -211,7 +213,7 @@ const Terminal = () => {
                     disabled={paymentDisabled}
                     onClick={(event) => {
                       event.stopPropagation();
-                      setPaymentMenuTableId((prev) => (prev === table.id ? null : table.id));
+                      setPaymentModalTableId(table.id);
                     }}
                   >
                     Payment
@@ -229,35 +231,6 @@ const Terminal = () => {
                     Release Table
                   </button>
                 </div>
-
-                {paymentMenuTableId === table.id && (
-                  <div className="table-actions">
-                    <button
-                      type="button"
-                      className="btn btn-subtle"
-                      disabled={paymentDisabled}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setPaymentMenuTableId(null);
-                        payByCashForTableOrder(table.id);
-                      }}
-                    >
-                      Pay by Cash
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      disabled={paymentDisabled}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setPaymentMenuTableId(null);
-                        payByNetbankingForTableOrder(table.id);
-                      }}
-                    >
-                      Pay by Netbanking
-                    </button>
-                  </div>
-                )}
                   </>
                 )}
               </article>
@@ -269,6 +242,16 @@ const Terminal = () => {
           )}
         </>
       )}
+
+      <PaymentModal
+        isOpen={paymentModalTableId !== null}
+        tableId={paymentModalTableId}
+        amount={paymentModalTableId !== null ? getSelectedUnpaidOrderAmount(paymentModalTableId) : 0}
+        busy={actionTableId === paymentModalTableId}
+        onClose={() => setPaymentModalTableId(null)}
+        onPayByCash={payByCashForTableOrder}
+        onPayByNetbanking={payByNetbankingForTableOrder}
+      />
     </main>
   );
 };

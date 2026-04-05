@@ -2,7 +2,7 @@ import { signTrackToken, verifyTrackToken } from "../utils/trackToken.util.js";
 import * as tableRepo from "../repository/table.repository.js";
 import * as orderRepo from "../repository/order.repository.js";
 
-const TRACK_STATUSES = ["to_cook", "preparing", "completed", "paid"];
+const TRACK_STATUSES = ["to_cook", "preparing", "completed"];
 
 export async function generateTrackToken(req, res, next) {
   try {

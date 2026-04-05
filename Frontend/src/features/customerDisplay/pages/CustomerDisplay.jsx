@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { generateTrackToken, getTables } from "../services/customerDisplay.api";
+import { getActiveSession } from "../../session/services/Session.api";
 import "../styles/customerDisplay.scss";
 
 const CustomerDisplay = () => {
@@ -9,6 +10,7 @@ const CustomerDisplay = () => {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
+  const [activeSessionId, setActiveSessionId] = useState(null);
 
   useEffect(() => {
     const loadTables = async () => {
@@ -29,6 +31,19 @@ const CustomerDisplay = () => {
     loadTables();
   }, []);
 
+  useEffect(() => {
+    const loadActiveSession = async () => {
+      try {
+        const session = await getActiveSession();
+        setActiveSessionId(session?.id || null);
+      } catch {
+        setActiveSessionId(null);
+      }
+    };
+
+    loadActiveSession();
+  }, []);
+
   const selectedTable = useMemo(
     () => tables.find((table) => table.id === selectedTableId),
     [selectedTableId, tables],
@@ -36,10 +51,19 @@ const CustomerDisplay = () => {
 
   const handleGenerate = async () => {
     if (!selectedTableId) return;
+
+    if (!activeSessionId) {
+      setError("Start a POS session before generating a customer tracking QR");
+      return;
+    }
+
     setCreating(true);
     setError("");
     try {
-      const response = await generateTrackToken({ table_id: selectedTableId });
+      const response = await generateTrackToken({
+        table_id: selectedTableId,
+        session_id: activeSessionId,
+      });
       setTrackUrl(response.track_url || "");
     } catch (requestError) {
       setError(requestError?.message || "Could not generate QR link");

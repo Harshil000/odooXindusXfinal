@@ -59,14 +59,22 @@ const useKitchen = () => {
     try {
       const updated = await updateKitchenOrderStatus(order.id, nextStatus);
       setOrders((prev) => dedupeOrdersById(
-        prev.map((item) => (item.id === updated.id ? normalizeKitchenOrder(updated) : item)),
+        prev.map((item) => {
+          if (item.id !== order.id) return item;
+          return {
+            ...item,
+            status: normalizeKitchenStatus(updated?.status || nextStatus),
+          };
+        }),
       ));
+
+      await loadOrders();
     } catch (requestError) {
       setError(requestError?.message || "Could not update order status");
     } finally {
       setSavingOrderId(null);
     }
-  }, []);
+  }, [loadOrders]);
 
   useEffect(() => {
     loadOrders();

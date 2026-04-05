@@ -5,15 +5,30 @@ RETURNING *;
 `;
 
 export const GET_ORDERS = `
-SELECT *
-FROM orders
-WHERE restaurant_id = $1
-ORDER BY created_at DESC;
+SELECT
+	o.*,
+	MAX(rt.table_number) AS table_number,
+	COALESCE(COUNT(oi.id), 0)::int AS item_count,
+	COALESCE(SUM(oi.subtotal), 0)::numeric(10,2) AS total_amount
+FROM orders o
+LEFT JOIN restaurant_tables rt ON rt.id = o.table_id
+LEFT JOIN order_items oi ON oi.order_id = o.id
+WHERE o.restaurant_id = $1
+GROUP BY o.id
+ORDER BY o.created_at DESC;
 `;
 
 export const GET_ORDER_BY_ID = `
-SELECT * FROM orders
-WHERE id = $1 AND restaurant_id = $2;
+SELECT
+	o.*,
+	MAX(rt.table_number) AS table_number,
+	COALESCE(COUNT(oi.id), 0)::int AS item_count,
+	COALESCE(SUM(oi.subtotal), 0)::numeric(10,2) AS total_amount
+FROM orders o
+LEFT JOIN restaurant_tables rt ON rt.id = o.table_id
+LEFT JOIN order_items oi ON oi.order_id = o.id
+WHERE o.id = $1 AND o.restaurant_id = $2
+GROUP BY o.id;
 `;
 
 export const UPDATE_ORDER_STATUS = `
@@ -31,12 +46,14 @@ WHERE id = $1 AND restaurant_id = $2;
 export const GET_KITCHEN_ORDERS = `
 SELECT
 	o.*,
-	COALESCE(COUNT(oi.id), 0)::int AS item_count,
+	MAX(rt.table_number) AS table_number,
+	COALESCE(SUM(oi.quantity), 0)::int AS item_count,
 	COALESCE(
 		ARRAY_REMOVE(ARRAY_AGG(DISTINCT p.name), NULL),
 		'{}'::text[]
 	) AS product_names
 FROM orders o
+LEFT JOIN restaurant_tables rt ON rt.id = o.table_id
 LEFT JOIN order_items oi ON oi.order_id = o.id
 LEFT JOIN products p ON p.id = oi.product_id
 WHERE o.restaurant_id = $1
@@ -48,9 +65,14 @@ ORDER BY o.created_at ASC;
 export const GET_TRACKING_ORDERS_BY_TABLE = `
 SELECT
 	o.*,
-	COALESCE(COUNT(oi.id), 0)::int AS item_count
+	COALESCE(SUM(oi.quantity), 0)::int AS item_count,
+	COALESCE(
+		ARRAY_REMOVE(ARRAY_AGG(DISTINCT p.name), NULL),
+		'{}'::text[]
+	) AS product_names
 FROM orders o
 LEFT JOIN order_items oi ON oi.order_id = o.id
+LEFT JOIN products p ON p.id = oi.product_id
 WHERE o.restaurant_id = $1
 	AND o.table_id = $2
 	AND ($3::uuid IS NULL OR o.session_id = $3::uuid)

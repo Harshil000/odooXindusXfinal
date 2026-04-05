@@ -53,6 +53,16 @@ export const createOrder = async (req, res) => {
     const { amount, currency = "INR", order_id } = req.body;
     const restaurant_id = req.user?.restaurant_id;
 
+    console.log("[createOrder] Request received:", { restaurant_id, amount, order_id, user: req.user });
+
+    if (!restaurant_id) {
+      console.warn("[createOrder] Missing restaurant_id in auth context");
+      return res.status(401).json({
+        success: false,
+        error: "Restaurant ID not found in user context",
+      });
+    }
+
     if (!amount || amount <= 0) {
       return res.status(400).json({
         success: false,
@@ -61,13 +71,17 @@ export const createOrder = async (req, res) => {
     }
 
     // Create order in Razorpay
+    console.log("[createOrder] Calling createRazorpayOrder with:", { amount, currency });
     const razorpayResult = await createRazorpayOrder(amount, currency);
+    console.log("[createOrder] Razorpay result:", razorpayResult);
 
     if (!razorpayResult.success) {
+      console.error("[createOrder] Razorpay order creation failed:", razorpayResult);
       return res.status(500).json(razorpayResult);
     }
 
     // Create payment record in database
+    console.log("[createOrder] Creating payment record in database");
     const paymentRecord = await createPaymentRecord(
       restaurant_id,
       order_id,
@@ -80,6 +94,8 @@ export const createOrder = async (req, res) => {
       null, // paid_at will be set after successful payment
     );
 
+    console.log("[createOrder] Payment record result:", paymentRecord);
+
     if (!paymentRecord.success) {
       console.error("Failed to create payment record:", paymentRecord.error);
       return res.status(500).json({
@@ -88,6 +104,7 @@ export const createOrder = async (req, res) => {
       });
     }
 
+    console.log("[createOrder] Order created successfully");
     return res.status(201).json({
       success: true,
       data: {
@@ -97,10 +114,11 @@ export const createOrder = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error in createOrder controller:", error.message);
+    console.error("[createOrder] Unexpected error:", error);
     return res.status(500).json({
       success: false,
-      error: "Failed to create order",
+      error: error.message || "Failed to create order",
+      details: error.stack,
     });
   }
 };
@@ -111,6 +129,16 @@ export const createCashPayment = async (req, res) => {
     const { amount, order_id } = req.body;
     const restaurant_id = req.user?.restaurant_id;
 
+    console.log("[createCashPayment] Request received:", { restaurant_id, amount, order_id });
+
+    if (!restaurant_id) {
+      console.warn("[createCashPayment] Missing restaurant_id");
+      return res.status(401).json({
+        success: false,
+        error: "Restaurant ID not found in user context",
+      });
+    }
+
     if (!amount || amount <= 0) {
       return res.status(400).json({
         success: false,
@@ -118,19 +146,23 @@ export const createCashPayment = async (req, res) => {
       });
     }
 
+    console.log("[createCashPayment] Creating cash payment record");
     const paymentRecord = await createPaymentRecord(
       restaurant_id,
       order_id || null,
       amount,
       "cash",
-      "completed",
+      "paid",
       null,
       null,
       null,
       new Date(),
     );
 
+    console.log("[createCashPayment] Payment record result:", paymentRecord);
+
     if (!paymentRecord.success) {
+      console.error("[createCashPayment] Failed to create payment record:", paymentRecord.error);
       return res.status(500).json({
         success: false,
         error: "Failed to create cash payment record",
@@ -138,18 +170,21 @@ export const createCashPayment = async (req, res) => {
     }
 
     if (order_id) {
+      console.log("[createCashPayment] Settling order and table");
       await settleOrderAndTable(restaurant_id, order_id);
     }
 
+    console.log("[createCashPayment] Cash payment completed successfully");
     return res.status(201).json({
       success: true,
       data: paymentRecord.data,
     });
   } catch (error) {
-    console.error("Error in createCashPayment controller:", error.message);
+    console.error("[createCashPayment] Unexpected error:", error);
     return res.status(500).json({
       success: false,
       error: error.message || "Failed to create cash payment",
+      details: error.stack,
     });
   }
 };
@@ -168,6 +203,10 @@ export const getPaymentHistory = async (req, res) => {
         payment.payment_method === "razorpay"
           ? "netbanking"
           : payment.payment_method,
+      status:
+        payment.status === "completed" || payment.razorpay_payment_id
+          ? "paid"
+          : payment.status,
     }));
 
     const grouped = payments.reduce((acc, payment) => {
@@ -225,12 +264,15 @@ export const verifyPayment = async (req, res) => {
       return res.status(400).json(verificationResult);
     }
 
-    // Update payment status in database
-    const updateResult = await updatePaymentStatus(
-      "completed",
-      signature,
-      paymentId,
-    );
+      const paymentRecordByOrder = await getPaymentByRazorpayOrderId(orderId);
+      const updateResult = paymentRecordByOrder?.success && paymentRecordByOrder?.data?.id
+        ? await updatePaymentStatus(
+            "paid",
+            paymentId,
+            signature,
+            paymentRecordByOrder.data.id,
+          )
+        : { success: false, error: "Payment record not found for Razorpay order" };
 
     if (!updateResult.success) {
       console.error("Failed to update payment status in database");

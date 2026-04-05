@@ -7,6 +7,7 @@ import {
   getPaymentByOrder,
   getPaymentByRazorpayPaymentId,
   getPaymentByRazorpayOrderId as getPaymentByRazorpayOrderIdRepo,
+  updatePaymentStatus as updatePaymentStatusById,
   updatePaymentByRazorpayId,
   createRefund,
   getRefundsByPaymentId,
@@ -15,21 +16,24 @@ import {
 // Create Razorpay Order
 export const createRazorpayOrder = async (amount, currency = "INR") => {
   try {
+    console.log("[createRazorpayOrder] Creating order with amount:", amount, "currency:", currency);
     const order = await razorpayInstance.orders.create({
       amount: amount * 100, // Razorpay expects amount in paise
       currency,
       receipt: `receipt_${Date.now()}`,
     });
 
+    console.log("[createRazorpayOrder] Order created successfully:", order.id);
     return {
       success: true,
       data: order,
     };
   } catch (error) {
-    console.error("Error creating Razorpay order:", error.message);
+    console.error("[createRazorpayOrder] Error creating order:", error.message);
     return {
       success: false,
       error: error.message,
+      details: error,
     };
   }
 };
@@ -79,6 +83,13 @@ export const createPaymentRecord = async (
   paid_at,
 ) => {
   try {
+    console.log("[createPaymentRecord] Creating payment with:", {
+      restaurant_id,
+      order_id,
+      amount,
+      payment_method,
+      status,
+    });
     const payment = await createPayment(
       restaurant_id,
       order_id,
@@ -91,15 +102,17 @@ export const createPaymentRecord = async (
       paid_at,
     );
 
+    console.log("[createPaymentRecord] Payment created with ID:", payment?.id);
     return {
       success: true,
       data: payment,
     };
   } catch (error) {
-    console.error("Error creating payment record:", error.message);
+    console.error("[createPaymentRecord] Error creating payment record:", error.message, error);
     return {
       success: false,
       error: error.message,
+      details: error,
     };
   }
 };
@@ -107,14 +120,16 @@ export const createPaymentRecord = async (
 // Update Payment Status After Verification
 export const updatePaymentStatus = async (
   status,
-  razorpay_signature,
   razorpay_payment_id,
+  razorpay_signature,
+  id,
 ) => {
   try {
-    const payment = await updatePaymentByRazorpayId(
+    const payment = await updatePaymentStatusById(
       status,
-      razorpay_signature,
       razorpay_payment_id,
+      razorpay_signature,
+      id,
     );
 
     return {

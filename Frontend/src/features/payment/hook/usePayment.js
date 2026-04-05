@@ -9,9 +9,15 @@ import {
 const normalizeMethod = (payment_method) =>
   payment_method === "razorpay" ? "netbanking" : payment_method;
 
+const normalizeStatus = (status) =>
+  status === "completed" ? "paid" : status;
+
 const formatPayment = (payment) => ({
   ...payment,
   payment_method: normalizeMethod(payment.payment_method),
+  status: payment.razorpay_payment_id
+    ? "paid"
+    : normalizeStatus(payment.status),
 });
 
 const groupByMethod = (payments) =>

@@ -14,6 +14,7 @@ import authRoute from "./routes/auth.route.js";
 import customerDisplayRoute from "./routes/customerDisplay.route.js";
 import publicRoute from "./routes/public.route.js";
 import paymentRoute from "./payment/payment.route.js";
+import dashboardRoute from "./routes/dashboard.route.js";
 import { handleError } from "./middleware/error.middleware.js";
 
 const app = express();
@@ -75,6 +76,9 @@ app.use("/api/public", publicRoute);
 
 // Payments
 app.use("/api/payments", paymentRoute);
+
+// Dashboard analytics
+app.use("/api/dashboard", dashboardRoute);
 // =========================
 // 404 HANDLER
 // =========================

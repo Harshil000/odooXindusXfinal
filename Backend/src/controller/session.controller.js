@@ -58,7 +58,7 @@ export async function updateSession(req, res, next) {
       });
     }
 
-    const session = await repo.closeSession(req.params.id);
+    const session = await repo.closeSession(req.params.id, restaurant_id);
     await tableRepo.releaseTablesBySession(restaurant_id, req.params.id);
     res.json(session);
   } catch (error) {

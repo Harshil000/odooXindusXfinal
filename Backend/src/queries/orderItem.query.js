@@ -12,8 +12,12 @@ SELECT * FROM order_items;
 
 // GET BY ORDER
 export const GET_ITEMS_BY_ORDER = `
-SELECT * FROM order_items
-WHERE order_id = $1;
+SELECT
+    oi.*,
+    p.name AS product_name
+FROM order_items oi
+LEFT JOIN products p ON p.id = oi.product_id
+WHERE oi.order_id = $1;
 `;
 
 // UPDATE ITEM

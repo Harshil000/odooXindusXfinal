@@ -23,7 +23,7 @@ export async function createRazorpayOrder(data) {
 export async function createCashPayment(data) {
   try {
     const response = await api.post("/cash", data);
-    return response.data;
+    return response.data.data;
   } catch (error) {
     throw normalizeError(error);
   }

@@ -56,11 +56,11 @@ const Kitchen = () => {
                     </div>
                     <div className="ticket-row">
                       <span className="ticket-label">Table</span>
-                      <strong>{order.table_id || "-"}</strong>
+                      <strong>{order.table_number || order.table_id || "-"}</strong>
                     </div>
                     <div className="ticket-row">
                       <span className="ticket-label">Items</span>
-                      <strong>{order.item_count || 0}</strong>
+                      <strong>{order.item_count ?? 0}</strong>
                     </div>
                     <div className="ticket-row">
                       <span className="ticket-label">Products</span>

@@ -15,6 +15,15 @@ import { verifyToken } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
+// Test endpoint to verify auth is working
+router.get("/test", verifyToken, (req, res) => {
+  res.json({
+    success: true,
+    message: "Auth middleware working",
+    user: req.user,
+  });
+});
+
 // Get payment history grouped by method
 router.get("/history", verifyToken, getPaymentHistory);
 

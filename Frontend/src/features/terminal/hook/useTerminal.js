@@ -9,6 +9,13 @@ import {
   createRazorpayOrder,
   verifyRazorpayPayment,
 } from "../../payment/services/payment.api";
+import { toast } from "react-toastify";
+
+const getErrorMessage = (requestError, fallback) => (
+  requestError?.message
+  || requestError?.error
+  || fallback
+);
 
 const useTerminal = () => {
   const [activeSession, setActiveSession] = useState(null);
@@ -60,7 +67,9 @@ const useTerminal = () => {
       setOrders(Array.isArray(ordersData) ? ordersData : []);
       setProducts(Array.isArray(productsData) ? productsData : []);
     } catch (requestError) {
-      setError(requestError?.message || "Could not load terminal data");
+      const message = getErrorMessage(requestError, "Could not load terminal data");
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -136,17 +145,34 @@ const useTerminal = () => {
     return getCartItemsForTable(tableId).reduce((sum, item) => sum + item.subtotal, 0);
   }, [getCartItemsForTable]);
 
+  const getSelectedUnpaidOrderAmount = useCallback((tableId) => {
+    const list = unpaidOrdersByTable[tableId] || [];
+    if (!list.length) return 0;
+
+    const selectedOrderId = selectedUnpaidOrderByTable[tableId];
+    const latest = [...list].sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    )[0];
+    const selected = list.find((item) => String(item.id) === String(selectedOrderId)) || latest;
+
+    return Number(selected?.total_amount || 0);
+  }, [unpaidOrdersByTable, selectedUnpaidOrderByTable]);
+
   const createOrderForTable = useCallback(async (tableId) => {
     if (createOrderInFlight.current.has(tableId)) return;
 
     if (!activeSession?.id) {
-      setError("Open a POS session before creating orders");
+      const message = "Open a POS session before creating orders";
+      setError(message);
+      toast.error(message);
       return;
     }
 
     const cartItems = getCartItemsForTable(tableId);
     if (cartItems.length === 0) {
-      setError("Add at least one product before placing the order");
+      const message = "Add at least one product before placing the order";
+      setError(message);
+      toast.error(message);
       return;
     }
 
@@ -168,7 +194,15 @@ const useTerminal = () => {
         })),
       );
 
-      setOrders((prev) => [created, ...prev]);
+      const localTotal = cartItems.reduce((sum, item) => sum + Number(item.subtotal || 0), 0);
+      const localItemCount = cartItems.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+      const enrichedCreated = {
+        ...created,
+        total_amount: localTotal,
+        item_count: localItemCount,
+      };
+
+      setOrders((prev) => [enrichedCreated, ...prev]);
       setTables((prev) => prev.map((table) => {
         if (table.id !== tableId) return table;
         return { ...table, status: "occupied" };
@@ -183,7 +217,9 @@ const useTerminal = () => {
         return next;
       });
     } catch (requestError) {
-      setError(requestError?.message || "Could not create order for table");
+      const message = getErrorMessage(requestError, "Could not create order for table");
+      setError(message);
+      toast.error(message);
     } finally {
       createOrderInFlight.current.delete(tableId);
       setActionTableId(null);
@@ -197,53 +233,6 @@ const useTerminal = () => {
     }));
   }, []);
 
-  const resolveOrderPaymentMeta = useCallback(async (tableId) => {
-    const list = unpaidOrdersByTable[tableId] || [];
-    if (!list.length) {
-      throw new Error("No unpaid orders for this table");
-    }
-
-    const selectedOrderId = selectedUnpaidOrderByTable[tableId];
-    const latest = [...list].sort(
-      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-    )[0];
-    const selected = list.find((item) => String(item.id) === String(selectedOrderId)) || latest;
-
-    const detail = await getOrderDetails(selected.id);
-    const amount = (detail?.items || []).reduce(
-      (sum, item) => sum + Number(item.subtotal || 0),
-      0,
-    );
-
-    if (amount <= 0) {
-      throw new Error("Selected order has no payable amount");
-    }
-
-    return { list, selected, amount };
-  }, [selectedUnpaidOrderByTable, unpaidOrdersByTable]);
-
-  const markOrderPaidLocally = useCallback((tableId, selectedId, list) => {
-    setOrders((prev) => prev.map((item) => (
-      item.id === selectedId ? { ...item, status: "paid" } : item
-    )));
-
-    const remainingUnpaid = list.filter((item) => item.id !== selectedId).length;
-    if (remainingUnpaid === 0) {
-      setTables((prev) => prev.map((table) => {
-        if (table.id !== tableId) return table;
-        return { ...table, status: "available" };
-      }));
-    }
-
-    setSelectedUnpaidOrderByTable((prev) => {
-      const next = { ...prev };
-      if (remainingUnpaid === 0) {
-        delete next[tableId];
-      }
-      return next;
-    });
-  }, []);
-
   const payByCashForTableOrder = useCallback(async (tableId) => {
     if (paymentInFlight.current.has(tableId)) return;
 
@@ -251,41 +240,97 @@ const useTerminal = () => {
     setActionTableId(tableId);
     setError("");
     try {
-      const { list, selected, amount } = await resolveOrderPaymentMeta(tableId);
+      const list = unpaidOrdersByTable[tableId] || [];
+      if (!list.length) {
+        throw new Error("No unpaid orders for this table");
+      }
 
+      const selectedOrderId = selectedUnpaidOrderByTable[tableId];
+      const latest = [...list].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      )[0];
+      const selected = list.find((item) => String(item.id) === String(selectedOrderId)) || latest;
+
+      const detail = await getOrderDetails(selected.id);
+      const amount = (detail?.items || []).reduce(
+        (sum, item) => sum + Number(item.subtotal || 0),
+        0,
+      );
+
+      if (amount <= 0) {
+        throw new Error("Selected order has no payable amount");
+      }
+
+      console.log("[payByCashForTableOrder] Creating cash payment:", { amount, order_id: selected.id });
       await createCashPayment({
         amount,
         order_id: selected.id,
       });
 
-      markOrderPaidLocally(tableId, selected.id, list);
+      console.log("[payByCashForTableOrder] Cash payment successful, updating order status");
+      setOrders((prev) => prev.map((item) => (
+        item.id === selected.id ? { ...item, status: "paid" } : item
+      )));
+
+      const remainingUnpaid = list.filter((item) => item.id !== selected.id).length;
+      if (remainingUnpaid === 0) {
+        setTables((prev) => prev.map((table) => {
+          if (table.id !== tableId) return table;
+          return { ...table, status: "available" };
+        }));
+      }
     } catch (requestError) {
-      setError(requestError?.message || "Could not complete cash payment");
+      console.error("[payByCashForTableOrder] Error:", requestError);
+      const message = getErrorMessage(requestError, "Could not complete cash payment");
+      setError(message);
+      toast.error(message);
     } finally {
       paymentInFlight.current.delete(tableId);
       setActionTableId(null);
     }
-  }, [markOrderPaidLocally, resolveOrderPaymentMeta]);
+  }, [unpaidOrdersByTable, selectedUnpaidOrderByTable]);
 
   const payByNetbankingForTableOrder = useCallback(async (tableId) => {
     if (paymentInFlight.current.has(tableId)) return;
 
     paymentInFlight.current.add(tableId);
-
     setActionTableId(tableId);
     setError("");
     try {
+      console.log("[payByNetbankingForTableOrder] Starting netbanking payment");
       const sdkReady = await loadRazorpayScript();
       if (!sdkReady || !window.Razorpay) {
         throw new Error("Razorpay SDK failed to load");
       }
 
-      const { list, selected, amount } = await resolveOrderPaymentMeta(tableId);
+      const list = unpaidOrdersByTable[tableId] || [];
+      if (!list.length) {
+        throw new Error("No unpaid orders for this table");
+      }
+
+      const selectedOrderId = selectedUnpaidOrderByTable[tableId];
+      const latest = [...list].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      )[0];
+      const selected = list.find((item) => String(item.id) === String(selectedOrderId)) || latest;
+
+      const detail = await getOrderDetails(selected.id);
+      const amount = (detail?.items || []).reduce(
+        (sum, item) => sum + Number(item.subtotal || 0),
+        0,
+      );
+
+      if (amount <= 0) {
+        throw new Error("Selected order has no payable amount");
+      }
+
+      console.log("[payByNetbankingForTableOrder] Creating razorpay order:", { amount, order_id: selected.id });
       const orderPayload = await createRazorpayOrder({
         amount,
         order_id: selected.id,
       });
 
+      console.log("[payByNetbankingForTableOrder] Razorpay order payload:", orderPayload);
       const razorpayOrder = orderPayload?.razorpayOrder;
       const razorpayKeyId = orderPayload?.razorpayKeyId;
 
@@ -303,26 +348,32 @@ const useTerminal = () => {
           order_id: razorpayOrder.id,
           method: {
             netbanking: true,
+            upi: true,
             card: false,
-            upi: false,
             wallet: false,
             emi: false,
             paylater: false,
           },
           handler: async (response) => {
             try {
+              console.log("[payByNetbankingForTableOrder] Payment handler called with response:", response);
               await verifyRazorpayPayment({
                 paymentId: response.razorpay_payment_id,
                 orderId: response.razorpay_order_id,
                 signature: response.razorpay_signature,
               });
+              console.log("[payByNetbankingForTableOrder] Payment verified successfully");
               resolve();
             } catch (verifyError) {
+              console.error("[payByNetbankingForTableOrder] Verification error:", verifyError);
               reject(verifyError);
             }
           },
           modal: {
-            ondismiss: () => reject(new Error("Payment cancelled")),
+            ondismiss: () => {
+              console.log("[payByNetbankingForTableOrder] Payment modal dismissed");
+              reject(new Error("Payment cancelled"));
+            },
           },
           theme: { color: "#0f766e" },
         });
@@ -330,14 +381,28 @@ const useTerminal = () => {
         instance.open();
       });
 
-      markOrderPaidLocally(tableId, selected.id, list);
+      console.log("[payByNetbankingForTableOrder] Payment completed, updating order status");
+      setOrders((prev) => prev.map((item) => (
+        item.id === selected.id ? { ...item, status: "paid" } : item
+      )));
+
+      const remainingUnpaid = list.filter((item) => item.id !== selected.id).length;
+      if (remainingUnpaid === 0) {
+        setTables((prev) => prev.map((table) => {
+          if (table.id !== tableId) return table;
+          return { ...table, status: "available" };
+        }));
+      }
     } catch (requestError) {
-      setError(requestError?.message || "Could not complete netbanking payment");
+      console.error("[payByNetbankingForTableOrder] Error:", requestError);
+      const message = getErrorMessage(requestError, "Could not complete netbanking payment");
+      setError(message);
+      toast.error(message);
     } finally {
       paymentInFlight.current.delete(tableId);
       setActionTableId(null);
     }
-  }, [loadRazorpayScript, markOrderPaidLocally, resolveOrderPaymentMeta]);
+  }, [loadRazorpayScript, unpaidOrdersByTable, selectedUnpaidOrderByTable]);
 
   const releaseTableSafely = useCallback(async (tableId) => {
     setActionTableId(tableId);
@@ -345,8 +410,13 @@ const useTerminal = () => {
     try {
       const released = await releaseTable(tableId);
       setTables((prev) => prev.map((table) => (table.id === tableId ? released : table)));
+      toast.success("Table released successfully");
     } catch (requestError) {
-      setError(requestError?.message || "Could not release table");
+      const message = Number(requestError?.unpaid_orders) > 0
+        ? `Payment needed: ${requestError.unpaid_orders} unpaid order(s) still open`
+        : getErrorMessage(requestError, "Could not release table");
+      setError(message);
+      toast.error(message);
     } finally {
       setActionTableId(null);
     }
@@ -370,6 +440,7 @@ const useTerminal = () => {
     selectUnpaidOrderForTable,
     payByCashForTableOrder,
     payByNetbankingForTableOrder,
+    getSelectedUnpaidOrderAmount,
     releaseTableSafely,
     refresh: loadTerminalData,
   };

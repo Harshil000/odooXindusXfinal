@@ -19,8 +19,8 @@ export async function getActiveSession(restaurant_id) {
   return result.rows[0];
 }
 
-export async function closeSession(id) {
-  const result = await pool.query(Q.CLOSE_SESSION, [id]);
+export async function closeSession(id, restaurant_id) {
+  const result = await pool.query(Q.CLOSE_SESSION, [id, restaurant_id]);
   return result.rows[0];
 }
 

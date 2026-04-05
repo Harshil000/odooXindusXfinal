@@ -17,16 +17,33 @@ export const CLOSE_SESSION = `
 UPDATE pos_sessions
 SET closed_at = NOW(),
     total_sales = (
-        SELECT COALESCE(SUM(total_amount),0)
-        FROM orders WHERE session_id = $1
+        SELECT COALESCE(SUM(oi.subtotal), 0)
+        FROM orders o
+        LEFT JOIN order_items oi ON oi.order_id = o.id
+        WHERE o.session_id = $1
     )
-WHERE id = $1
+WHERE id = $1 AND restaurant_id = $2
 RETURNING *;
 `;
 
 // GET ALL
 export const GET_ALL_SESSIONS = `
-SELECT * FROM pos_sessions
-WHERE restaurant_id = $1
-ORDER BY opened_at DESC;
+SELECT
+    ps.id,
+    ps.restaurant_id,
+    ps.opened_by,
+    ps.opened_at,
+    ps.closed_at,
+    COALESCE(sales.total_sales, 0)::numeric(10,2) AS total_sales
+FROM pos_sessions ps
+LEFT JOIN (
+    SELECT
+        o.session_id,
+        COALESCE(SUM(oi.subtotal), 0) AS total_sales
+    FROM orders o
+    LEFT JOIN order_items oi ON oi.order_id = o.id
+    GROUP BY o.session_id
+) sales ON sales.session_id = ps.id
+WHERE ps.restaurant_id = $1
+ORDER BY ps.opened_at DESC;
 `;

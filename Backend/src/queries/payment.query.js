@@ -17,14 +17,48 @@ RETURNING *;
 
 // GET ALL PAYMENTS
 export const GET_PAYMENTS = `
-SELECT * FROM payments
-ORDER BY created_at DESC;
+SELECT
+  p.id,
+  p.restaurant_id,
+  p.order_id,
+  p.amount,
+  p.payment_method,
+  CASE
+    WHEN p.status IN ('paid', 'completed') OR o.status = 'paid' THEN 'paid'
+    ELSE p.status
+  END AS status,
+  p.razorpay_order_id,
+  p.razorpay_payment_id,
+  p.razorpay_signature,
+  p.paid_at,
+  p.created_at,
+  p.updated_at
+FROM payments p
+LEFT JOIN orders o ON o.id = p.order_id
+ORDER BY p.created_at DESC;
 `;
 
 export const GET_PAYMENTS_BY_RESTAURANT = `
-SELECT * FROM payments
-WHERE restaurant_id = $1
-ORDER BY created_at DESC;
+SELECT
+  p.id,
+  p.restaurant_id,
+  p.order_id,
+  p.amount,
+  p.payment_method,
+  CASE
+    WHEN p.status IN ('paid', 'completed') OR o.status = 'paid' THEN 'paid'
+    ELSE p.status
+  END AS status,
+  p.razorpay_order_id,
+  p.razorpay_payment_id,
+  p.razorpay_signature,
+  p.paid_at,
+  p.created_at,
+  p.updated_at
+FROM payments p
+LEFT JOIN orders o ON o.id = p.order_id
+WHERE p.restaurant_id = $1
+ORDER BY p.created_at DESC;
 `;
 
 // GET BY ORDER

@@ -17,8 +17,8 @@ const ensurePaymentSchema = async () => {
   await pool.query(`
         CREATE TABLE IF NOT EXISTS payments (
             id SERIAL PRIMARY KEY,
-            restaurant_id INTEGER,
-            order_id INTEGER,
+            restaurant_id UUID NOT NULL,
+            order_id UUID,
             amount DECIMAL(10,2) NOT NULL,
             payment_method VARCHAR(50) NOT NULL,
             status VARCHAR(50) NOT NULL,
@@ -34,7 +34,7 @@ const ensurePaymentSchema = async () => {
   await pool.query(`
         CREATE TABLE IF NOT EXISTS refunds (
             id SERIAL PRIMARY KEY,
-            payment_id INTEGER REFERENCES payments(id),
+            payment_id INTEGER REFERENCES payments(id) ON DELETE CASCADE,
             razorpay_refund_id VARCHAR(255),
             amount DECIMAL(10,2) NOT NULL,
             reason TEXT,

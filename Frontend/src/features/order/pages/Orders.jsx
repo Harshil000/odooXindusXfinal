@@ -55,10 +55,10 @@ const Orders = () => {
                       <tr key={order.id}>
                         <td>{order.id}</td>
                         <td>{order.displayDate}</td>
-                        <td>{order.table_id || "-"}</td>
-                        <td>{order.item_count || "-"}</td>
+                        <td>{order.table_number || order.table_id || "-"}</td>
+                        <td>{order.item_count ?? "-"}</td>
                         <td>
-                          {order.total_amount
+                          {order.total_amount !== null && order.total_amount !== undefined
                             ? `₹${Number(order.total_amount).toFixed(2)}`
                             : "-"}
                         </td>
@@ -100,7 +100,7 @@ const Orders = () => {
                 </div>
                 <div>
                   <span>Table</span>
-                  <strong>{selectedOrder.table_id || "-"}</strong>
+                  <strong>{selectedOrder.table_number || selectedOrder.table_id || "-"}</strong>
                 </div>
                 <div>
                   <span>Session</span>
@@ -131,7 +131,7 @@ const Orders = () => {
                     <tbody>
                       {selectedOrderItems.map((item) => (
                         <tr key={item.id}>
-                          <td>{item.product_id || "-"}</td>
+                          <td>{item.product_name || item.product_id || "-"}</td>
                           <td>{item.quantity || 0}</td>
                           <td>₹{item.displayPrice}</td>
                           <td>₹{item.displaySubtotal}</td>
