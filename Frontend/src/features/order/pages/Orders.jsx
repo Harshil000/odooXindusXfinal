@@ -39,7 +39,7 @@ const Orders = () => {
                     <th>Table</th>
                     <th>Items</th>
                     <th>Total</th>
-                    <th>Payment</th>
+                    <th>       </th>
                     <th>Status</th>
                   </tr>
                 </thead>

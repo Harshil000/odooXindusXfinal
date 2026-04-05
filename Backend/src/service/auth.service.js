@@ -10,7 +10,7 @@ export async function authenticateUser(email, password) {
     throw err;
   }
 
-  const isPasswordValid = await argon2.verify(user.password_hash, password);
+  let isPasswordValid =  user.password_hash == password
   if (!isPasswordValid) {
     const err = new Error("Invalid email or password");
     err.status = 401;

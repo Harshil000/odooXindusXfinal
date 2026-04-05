@@ -28,8 +28,10 @@ const PaymentModal = ({
     if (!canProceed) return;
     setIsProcessing(true);
     try {
-      await onPayByCash(tableId, { name: name.trim(), email: email.trim() });
-      onClose();
+      const ok = await onPayByCash(tableId, { name: name.trim(), email: email.trim() });
+      if (ok !== false) {
+        onClose();
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -39,8 +41,10 @@ const PaymentModal = ({
     if (!canProceed) return;
     setIsProcessing(true);
     try {
-      await onPayByNetbanking(tableId, { name: name.trim(), email: email.trim() });
-      onClose();
+      const ok = await onPayByNetbanking(tableId, { name: name.trim(), email: email.trim() });
+      if (ok !== false) {
+        onClose();
+      }
     } finally {
       setIsProcessing(false);
     }

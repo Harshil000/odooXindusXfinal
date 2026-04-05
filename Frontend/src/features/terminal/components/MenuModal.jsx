@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const MenuModal = ({
   isOpen,
@@ -20,24 +20,31 @@ const MenuModal = ({
   const cartItems = getCartItemsForTable(tableId);
   const cartTotal = getCartTotalForTable(tableId);
   const placeOrderDisabled = !activeSession || busy || cartItems.length === 0;
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
-  const groupedProducts = useMemo(() => {
-    const sortedProducts = [...products].sort((a, b) => {
+  const sortedProducts = useMemo(() => {
+    return [...products].sort((a, b) => {
       const categoryA = String(a?.category_name || "Uncategorized").toLowerCase();
       const categoryB = String(b?.category_name || "Uncategorized").toLowerCase();
       if (categoryA !== categoryB) return categoryA.localeCompare(categoryB);
       return String(a?.name || "").toLowerCase().localeCompare(String(b?.name || "").toLowerCase());
     });
-
-    return sortedProducts.reduce((acc, product) => {
-      const category = product?.category_name || "Uncategorized";
-      if (!acc[category]) {
-        acc[category] = [];
-      }
-      acc[category].push(product);
-      return acc;
-    }, {});
   }, [products]);
+
+  const categories = useMemo(() => {
+    const unique = new Set(sortedProducts.map((product) => product?.category_name || "Uncategorized"));
+    return ["All", ...Array.from(unique)];
+  }, [sortedProducts]);
+
+  const filteredProducts = useMemo(() => {
+    if (selectedCategory === "All") return sortedProducts;
+    return sortedProducts.filter((product) => (product?.category_name || "Uncategorized") === selectedCategory);
+  }, [selectedCategory, sortedProducts]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setSelectedCategory("All");
+  }, [isOpen, tableId]);
 
   return (
     <div className="terminal-modal-overlay" onClick={onClose}>
@@ -55,49 +62,59 @@ const MenuModal = ({
           <p className="terminal-note">Start a running session from home page to place orders.</p>
         ) : null}
 
-        <div className="terminal-product-wrap terminal-product-list">
+        <div className="menu-category-row" role="tablist" aria-label="Filter menu by category">
+          {categories.map((category) => (
+            <button
+              key={category}
+              type="button"
+              className={`menu-category-pill ${selectedCategory === category ? "active" : ""}`}
+              onClick={() => setSelectedCategory(category)}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+
+        <div className="terminal-product-wrap terminal-product-list terminal-product-grid">
           {products.length === 0 ? (
             <p className="no-products">No active products available</p>
-          ) : Object.entries(groupedProducts).map(([categoryName, categoryProducts]) => (
-            <section key={categoryName} className="menu-category-section">
-              <header className="menu-category-header">
-                <h3>{categoryName}</h3>
-                <span>{categoryProducts.length} items</span>
-              </header>
-              <div className="menu-category-grid">
-                {categoryProducts.map((product) => {
-                  const qty = Number(cartByTable?.[tableId]?.[product.id] || 0);
-                  return (
-                    <div key={product.id} className="product-row menu-product-row">
-                      <div>
-                        <strong>{product.name}</strong>
-                        <small>INR {Number(product.price || 0).toFixed(2)}</small>
-                      </div>
-                      <div className="qty-controls">
-                        <button
-                          type="button"
-                          className="qty-btn"
-                          onClick={() => onDecrement(tableId, product.id)}
-                          disabled={busy || qty === 0}
-                        >
-                          -
-                        </button>
-                        <span>{qty}</span>
-                        <button
-                          type="button"
-                          className="qty-btn"
-                          onClick={() => onIncrement(tableId, product.id)}
-                          disabled={busy}
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          ))}
+          ) : filteredProducts.length === 0 ? (
+            <p className="no-products">No products in this category.</p>
+          ) : filteredProducts.map((product) => {
+            const qty = Number(cartByTable?.[tableId]?.[product.id] || 0);
+            const category = product?.category_name || "Uncategorized";
+
+            return (
+              <article key={product.id} className="menu-product-card">
+                <div className="menu-product-top">
+                  <span className="menu-product-category">{category}</span>
+                  <strong>INR {Number(product.price || 0).toFixed(2)}</strong>
+                </div>
+
+                <h3>{product.name}</h3>
+
+                <div className="qty-controls menu-qty-controls">
+                  <button
+                    type="button"
+                    className="qty-btn"
+                    onClick={() => onDecrement(tableId, product.id)}
+                    disabled={busy || qty === 0}
+                  >
+                    -
+                  </button>
+                  <span>{qty}</span>
+                  <button
+                    type="button"
+                    className="qty-btn"
+                    onClick={() => onIncrement(tableId, product.id)}
+                    disabled={busy}
+                  >
+                    +
+                  </button>
+                </div>
+              </article>
+            );
+          })}
         </div>
 
         <div className="cart-summary terminal-cart-summary">

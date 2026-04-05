@@ -364,11 +364,14 @@ const useTerminal = () => {
         delete next[tableId];
         return next;
       });
+
+      return true;
     } catch (requestError) {
       console.error("[payByCashForTableOrder] Error:", requestError);
       const message = getErrorMessage(requestError, "Could not complete cash payment");
       setError(message);
       toast.error(message);
+      return false;
     } finally {
       paymentInFlight.current.delete(tableId);
       setActionTableId(null);
@@ -507,11 +510,14 @@ const useTerminal = () => {
         delete next[tableId];
         return next;
       });
+
+      return true;
     } catch (requestError) {
       console.error("[payByNetbankingForTableOrder] Error:", requestError);
       const message = getErrorMessage(requestError, "Could not complete netbanking payment");
       setError(message);
       toast.error(message);
+      return false;
     } finally {
       paymentInFlight.current.delete(tableId);
       setActionTableId(null);
