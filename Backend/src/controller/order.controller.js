@@ -2,7 +2,11 @@ import * as repo from "../repository/order.repository.js";
 import * as itemRepo from "../repository/orderItem.repository.js";
 import * as tableRepo from "../repository/table.repository.js";
 import { emitToRestaurantAndTable } from "../socket/socket.js";
-import { buildReceiptWithItemTax, sendReceiptEmail } from "../service/receipt.service.js";
+import {
+  buildCombinedReceiptWithItemTax,
+  buildReceiptWithItemTax,
+  sendReceiptEmail,
+} from "../service/receipt.service.js";
 
 const KITCHEN_STATUSES = ["to_cook", "preparing", "completed"];
 
@@ -181,6 +185,62 @@ export async function sendReceipt(req, res, next) {
 
     res.status(200).json({
       message: "Bill generated and emailed successfully",
+      receipt,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function sendCombinedReceipt(req, res, next) {
+  try {
+    const restaurant_id = req.user?.restaurant_id;
+    const { orderIds, userEmail, itemTaxes } = req.body;
+
+    if (!restaurant_id) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    if (!Array.isArray(orderIds) || orderIds.length === 0 || !userEmail) {
+      return res.status(400).json({ message: "orderIds (array) and userEmail are required in req.body" });
+    }
+
+    const uniqueOrderIds = [...new Set(orderIds.map((id) => String(id).trim()).filter(Boolean))];
+    if (!uniqueOrderIds.length) {
+      return res.status(400).json({ message: "No valid order IDs provided" });
+    }
+
+    const orders = [];
+    for (const orderId of uniqueOrderIds) {
+      const order = await repo.getOrderById(orderId, restaurant_id);
+      if (!order) {
+        return res.status(404).json({ message: `Order not found: ${orderId}` });
+      }
+      orders.push(order);
+    }
+
+    const orderItemsMap = {};
+    for (const order of orders) {
+      orderItemsMap[order.id] = await itemRepo.getItemsByOrder(order.id);
+    }
+
+    const restaurant = await repo.getRestaurantById(restaurant_id);
+
+    const receipt = buildCombinedReceiptWithItemTax({
+      orders,
+      restaurantName: restaurant?.name,
+      orderItemsMap,
+      itemTaxes,
+    });
+
+    await sendReceiptEmail({
+      toEmail: userEmail,
+      restaurantName: receipt.restaurantName,
+      receipt,
+    });
+
+    res.status(200).json({
+      message: "Combined bill generated and emailed successfully",
       receipt,
     });
   } catch (error) {

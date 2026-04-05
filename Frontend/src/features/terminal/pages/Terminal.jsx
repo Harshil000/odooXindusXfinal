@@ -13,7 +13,6 @@ const Terminal = () => {
     products,
     cartByTable,
     unpaidOrdersByTable,
-    selectedUnpaidOrderByTable,
     loading,
     error,
     actionTableId,
@@ -22,10 +21,10 @@ const Terminal = () => {
     getCartItemsForTable,
     getCartTotalForTable,
     createOrderForTable,
-    selectUnpaidOrderForTable,
     payByCashForTableOrder,
     payByNetbankingForTableOrder,
     getSelectedUnpaidOrderAmount,
+    prefetchTaxIncludedAmountForTable,
     releaseTableSafely,
   } = useTerminal();
 
@@ -110,10 +109,6 @@ const Terminal = () => {
             const isSelected = String(table.id) === String(selectedTableId);
             const cartItems = getCartItemsForTable(table.id);
             const cartTotal = getCartTotalForTable(table.id);
-            const selectedOrderId =
-              selectedUnpaidOrderByTable[table.id]
-              || (unpaidOrdersByTable[table.id] || [])[0]?.id
-              || "";
 
             const placeOrderDisabled = !activeSession || busy || cartItems.length === 0;
             const hasCustomerEmail = Boolean(customerByTable[String(table.id)]?.email);
@@ -169,29 +164,9 @@ const Terminal = () => {
                   <strong>INR {cartTotal.toFixed(2)}</strong>
                 </div>
 
-                <div className="pay-order-select-wrap">
-                  <label htmlFor={`pay-order-${table.id}`}>Order To Settle</label>
-                  <select
-                    id={`pay-order-${table.id}`}
-                    value={selectedOrderId}
-                    onClick={(event) => event.stopPropagation()}
-                    onChange={(event) => {
-                      event.stopPropagation();
-                      selectUnpaidOrderForTable(table.id, event.target.value);
-                    }}
-                    disabled={busy || unpaidCount === 0}
-                  >
-                    {unpaidCount === 0 ? (
-                      <option value="">No unpaid orders</option>
-                    ) : (
-                      (unpaidOrdersByTable[table.id] || []).map((order) => (
-                        <option key={order.id} value={order.id}>
-                          {`#${String(order.id).slice(0, 8)} • ${order.status}`}
-                        </option>
-                      ))
-                    )}
-                  </select>
-                </div>
+                {unpaidCount > 0 ? (
+                  <p className="terminal-note">Payment will settle all unpaid orders for this table in one go.</p>
+                ) : null}
 
                 {disableReason && <p className="terminal-note">{disableReason}</p>}
 
@@ -223,7 +198,9 @@ const Terminal = () => {
                         setEngageTableId(table.id);
                         return;
                       }
-                      setPaymentModalTableId(table.id);
+                      prefetchTaxIncludedAmountForTable(table.id)
+                        .catch(() => null)
+                        .finally(() => setPaymentModalTableId(table.id));
                     }}
                   >
                     Payment

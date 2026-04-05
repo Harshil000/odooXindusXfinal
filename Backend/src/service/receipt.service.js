@@ -67,12 +67,77 @@ export function buildReceiptWithItemTax({ order, restaurantName, items, itemTaxe
   };
 }
 
+export function buildCombinedReceiptWithItemTax({ orders, restaurantName, orderItemsMap, itemTaxes }) {
+  const taxMap = new Map();
+  if (Array.isArray(itemTaxes)) {
+    for (const entry of itemTaxes) {
+      if (!entry) continue;
+      const key = String(entry.itemId || entry.orderItemId || "").trim();
+      if (!key) continue;
+      const percent = Number(entry.taxPercent);
+      taxMap.set(key, Number.isFinite(percent) && percent >= 0 ? percent : 0);
+    }
+  }
+
+  const normalizedItems = [];
+
+  for (const order of orders) {
+    const items = orderItemsMap?.[order.id] || [];
+    for (const item of items) {
+      const quantity = Number(item.quantity || 0);
+      const price = toMoney(item.price);
+      const subtotal = toMoney(item.subtotal);
+      const dbTaxPercent = Number(item.tax_percent);
+      const taxPercent = taxMap.has(String(item.id))
+        ? taxMap.get(String(item.id))
+        : Number.isFinite(dbTaxPercent) && dbTaxPercent >= 0
+          ? dbTaxPercent
+          : 0;
+
+      const taxAmount = (subtotal * taxPercent) / 100;
+      const lineTotal = subtotal + taxAmount;
+
+      normalizedItems.push({
+        id: item.id,
+        orderId: order.id,
+        productName: item.product_name || "Unnamed Item",
+        quantity,
+        price,
+        subtotal,
+        taxPercent,
+        taxAmount,
+        lineTotal,
+      });
+    }
+  }
+
+  const itemCount = normalizedItems.reduce((sum, item) => sum + item.quantity, 0);
+  const subtotal = normalizedItems.reduce((sum, item) => sum + item.subtotal, 0);
+  const taxAmount = normalizedItems.reduce((sum, item) => sum + item.taxAmount, 0);
+  const total = subtotal + taxAmount;
+
+  return {
+    restaurantName: restaurantName || "Restaurant",
+    orderIds: orders.map((order) => order.id),
+    status: "paid",
+    tableNumber: orders[0]?.table_number || null,
+    itemCount,
+    subtotal,
+    taxAmount,
+    total,
+    generatedAt: new Date().toISOString(),
+    items: normalizedItems,
+  };
+}
+
 export function createReceiptHtml(receipt) {
+  const hasMultipleOrders = Array.isArray(receipt.orderIds) && receipt.orderIds.length > 1;
   const itemsHtml = receipt.items.length
     ? receipt.items
       .map(
         (item) => `
           <tr>
+            ${hasMultipleOrders ? `<td style="padding:8px;border:1px solid #ddd;">#${String(item.orderId).slice(0, 8)}</td>` : ""}
             <td style="padding:8px;border:1px solid #ddd;">${item.productName}</td>
             <td style="padding:8px;border:1px solid #ddd;text-align:center;">${item.quantity}</td>
             <td style="padding:8px;border:1px solid #ddd;text-align:right;">${item.price.toFixed(2)}</td>
@@ -86,21 +151,26 @@ export function createReceiptHtml(receipt) {
       .join("")
     : `
       <tr>
-        <td colspan="7" style="padding:8px;border:1px solid #ddd;text-align:center;">No items found</td>
+        <td colspan="${hasMultipleOrders ? "8" : "7"}" style="padding:8px;border:1px solid #ddd;text-align:center;">No items found</td>
       </tr>
     `;
+
+  const orderReference = hasMultipleOrders
+    ? receipt.orderIds.map((orderId) => `#${String(orderId).slice(0, 8)}`).join(", ")
+    : receipt.orderId;
 
   return `
     <div style="font-family:Arial,sans-serif;max-width:840px;margin:0 auto;">
       <h2 style="margin:0 0 8px;">${receipt.restaurantName}</h2>
-      <p style="margin:0 0 16px;color:#555;">Order Bill</p>
-      <p><strong>Order ID:</strong> ${receipt.orderId}</p>
+      <p style="margin:0 0 16px;color:#555;">${hasMultipleOrders ? "Combined Table Bill" : "Order Bill"}</p>
+      <p><strong>${hasMultipleOrders ? "Order IDs" : "Order ID"}:</strong> ${orderReference}</p>
       <p><strong>Table:</strong> ${receipt.tableNumber || "N/A"}</p>
       <p><strong>Status:</strong> ${receipt.status}</p>
       <p><strong>Generated At:</strong> ${receipt.generatedAt}</p>
       <table style="width:100%;border-collapse:collapse;margin-top:16px;">
         <thead>
           <tr style="background:#f5f5f5;">
+            ${hasMultipleOrders ? '<th style="padding:8px;border:1px solid #ddd;text-align:left;">Order</th>' : ""}
             <th style="padding:8px;border:1px solid #ddd;text-align:left;">Item</th>
             <th style="padding:8px;border:1px solid #ddd;text-align:center;">Qty</th>
             <th style="padding:8px;border:1px solid #ddd;text-align:right;">Price</th>

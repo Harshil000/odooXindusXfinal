@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getActiveSession } from "../../session/services/Session.api";
 import { getTables, releaseTable } from "../../setting/services/table.api";
-import { createOrder, getOrderDetails, getOrders, sendOrderReceipt } from "../../order/services/orders.api";
+import {
+  createOrder,
+  getOrderDetails,
+  getOrders,
+  sendCombinedOrderReceipt,
+  updateOrderStatus,
+} from "../../order/services/orders.api";
 import { getProducts } from "../../product/services/product.api";
 import { createOrderItem } from "../../order/services/orderItems.api";
 import {
@@ -19,6 +25,16 @@ const getErrorMessage = (requestError, fallback) => (
 
 const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || "").trim());
 
+const calculatePayableAmountFromItems = (items = []) => {
+  return items.reduce((sum, item) => {
+    const subtotal = Number(item?.subtotal || 0);
+    const taxPercent = Number(item?.tax_percent || 0);
+    const safeTaxPercent = Number.isFinite(taxPercent) && taxPercent > 0 ? taxPercent : 0;
+    const lineTax = (subtotal * safeTaxPercent) / 100;
+    return sum + subtotal + lineTax;
+  }, 0);
+};
+
 const useTerminal = () => {
   const [activeSession, setActiveSession] = useState(null);
   const [tables, setTables] = useState([]);
@@ -29,6 +45,7 @@ const useTerminal = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionTableId, setActionTableId] = useState(null);
+  const [payableAmountByOrder, setPayableAmountByOrder] = useState({});
   const createOrderInFlight = useRef(new Set());
   const paymentInFlight = useRef(new Set());
 
@@ -151,14 +168,44 @@ const useTerminal = () => {
     const list = unpaidOrdersByTable[tableId] || [];
     if (!list.length) return 0;
 
-    const selectedOrderId = selectedUnpaidOrderByTable[tableId];
-    const latest = [...list].sort(
-      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-    )[0];
-    const selected = list.find((item) => String(item.id) === String(selectedOrderId)) || latest;
+    let total = 0;
+    for (const order of list) {
+      const cached = Number(payableAmountByOrder[order.id]);
+      if (Number.isFinite(cached) && cached > 0) {
+        total += cached;
+      } else {
+        total += Number(order?.total_amount || 0);
+      }
+    }
 
-    return Number(selected?.total_amount || 0);
-  }, [unpaidOrdersByTable, selectedUnpaidOrderByTable]);
+    return total;
+  }, [unpaidOrdersByTable, payableAmountByOrder]);
+
+  const prefetchTaxIncludedAmountForTable = useCallback(async (tableId) => {
+    const list = unpaidOrdersByTable[tableId] || [];
+    if (!list.length) return 0;
+
+    const amountPairs = await Promise.all(
+      list.map(async (order) => {
+        const cached = Number(payableAmountByOrder[order.id]);
+        if (Number.isFinite(cached) && cached > 0) {
+          return [order.id, cached];
+        }
+
+        const detail = await getOrderDetails(order.id);
+        const amountWithTax = calculatePayableAmountFromItems(detail?.items || []);
+        return [order.id, amountWithTax];
+      }),
+    );
+
+    const amountMap = Object.fromEntries(amountPairs);
+    setPayableAmountByOrder((prev) => ({
+      ...prev,
+      ...amountMap,
+    }));
+
+    return Object.values(amountMap).reduce((sum, value) => sum + Number(value || 0), 0);
+  }, [unpaidOrdersByTable, payableAmountByOrder]);
 
   const createOrderForTable = useCallback(async (tableId) => {
     if (createOrderInFlight.current.has(tableId)) return;
@@ -247,55 +294,67 @@ const useTerminal = () => {
         throw new Error("No unpaid orders for this table");
       }
 
-      const selectedOrderId = selectedUnpaidOrderByTable[tableId];
-      const latest = [...list].sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-      )[0];
-      const selected = list.find((item) => String(item.id) === String(selectedOrderId)) || latest;
-
-      const detail = await getOrderDetails(selected.id);
-      const amount = (detail?.items || []).reduce(
-        (sum, item) => sum + Number(item.subtotal || 0),
-        0,
+      const amountPairs = await Promise.all(
+        list.map(async (order) => {
+          const detail = await getOrderDetails(order.id);
+          return [order.id, calculatePayableAmountFromItems(detail?.items || [])];
+        }),
       );
+      const amountMap = Object.fromEntries(amountPairs);
+      const amount = Object.values(amountMap).reduce((sum, value) => sum + Number(value || 0), 0);
+      const orderIds = list.map((order) => order.id);
 
       if (amount <= 0) {
         throw new Error("Selected order has no payable amount");
       }
 
-      console.log("[payByCashForTableOrder] Creating cash payment:", { amount, order_id: selected.id });
+      console.log("[payByCashForTableOrder] Creating cash payment:", { amount, tableId, orderCount: orderIds.length });
       await createCashPayment({
         amount,
-        order_id: selected.id,
+        order_id: null,
       });
+
+      await Promise.all(orderIds.map((orderId) => updateOrderStatus(orderId, "paid")));
+
+      setPayableAmountByOrder((prev) => ({
+        ...prev,
+        ...amountMap,
+      }));
 
       if (isValidEmail(receiptEmail)) {
         try {
-          await sendOrderReceipt({
-            orderId: selected.id,
+          await sendCombinedOrderReceipt({
+            orderIds,
             userEmail: String(receiptEmail).trim(),
           });
-          toast.success("Payment successful and receipt sent");
+          toast.success("All orders paid and combined receipt sent");
         } catch (mailError) {
           console.warn("Receipt email failed:", mailError);
-          toast.warning("Payment done, but receipt email failed");
+          toast.warning("All orders paid, but combined receipt email failed");
         }
       } else {
-        toast.success("Payment successful");
+        toast.success("All table orders paid successfully");
       }
 
-      console.log("[payByCashForTableOrder] Cash payment successful, updating order status");
       setOrders((prev) => prev.map((item) => (
-        item.id === selected.id ? { ...item, status: "paid" } : item
+        orderIds.includes(item.id) ? { ...item, status: "paid" } : item
       )));
 
-      const remainingUnpaid = list.filter((item) => item.id !== selected.id).length;
-      if (remainingUnpaid === 0) {
+      try {
+        const released = await releaseTable(tableId);
+        setTables((prev) => prev.map((table) => (table.id === tableId ? released : table)));
+      } catch {
         setTables((prev) => prev.map((table) => {
           if (table.id !== tableId) return table;
           return { ...table, status: "available" };
         }));
       }
+
+      setSelectedUnpaidOrderByTable((prev) => {
+        const next = { ...prev };
+        delete next[tableId];
+        return next;
+      });
     } catch (requestError) {
       console.error("[payByCashForTableOrder] Error:", requestError);
       const message = getErrorMessage(requestError, "Could not complete cash payment");
@@ -305,7 +364,7 @@ const useTerminal = () => {
       paymentInFlight.current.delete(tableId);
       setActionTableId(null);
     }
-  }, [unpaidOrdersByTable, selectedUnpaidOrderByTable]);
+  }, [unpaidOrdersByTable]);
 
   const payByNetbankingForTableOrder = useCallback(async (tableId, receiptEmail) => {
     if (paymentInFlight.current.has(tableId)) return;
@@ -325,27 +384,31 @@ const useTerminal = () => {
         throw new Error("No unpaid orders for this table");
       }
 
-      const selectedOrderId = selectedUnpaidOrderByTable[tableId];
-      const latest = [...list].sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-      )[0];
-      const selected = list.find((item) => String(item.id) === String(selectedOrderId)) || latest;
-
-      const detail = await getOrderDetails(selected.id);
-      const amount = (detail?.items || []).reduce(
-        (sum, item) => sum + Number(item.subtotal || 0),
-        0,
+      const amountPairs = await Promise.all(
+        list.map(async (order) => {
+          const detail = await getOrderDetails(order.id);
+          return [order.id, calculatePayableAmountFromItems(detail?.items || [])];
+        }),
       );
+      const amountMap = Object.fromEntries(amountPairs);
+      const amount = Object.values(amountMap).reduce((sum, value) => sum + Number(value || 0), 0);
+      const orderIds = list.map((order) => order.id);
+      const primaryOrderId = orderIds[0] || null;
 
       if (amount <= 0) {
         throw new Error("Selected order has no payable amount");
       }
 
-      console.log("[payByNetbankingForTableOrder] Creating razorpay order:", { amount, order_id: selected.id });
+      console.log("[payByNetbankingForTableOrder] Creating razorpay order:", { amount, tableId, orderCount: orderIds.length });
       const orderPayload = await createRazorpayOrder({
         amount,
-        order_id: selected.id,
+        order_id: primaryOrderId,
       });
+
+      setPayableAmountByOrder((prev) => ({
+        ...prev,
+        ...amountMap,
+      }));
 
       console.log("[payByNetbankingForTableOrder] Razorpay order payload:", orderPayload);
       const razorpayOrder = orderPayload?.razorpayOrder;
@@ -361,7 +424,7 @@ const useTerminal = () => {
           amount: Number(razorpayOrder.amount || 0),
           currency: razorpayOrder.currency || "INR",
           name: "POS Payment",
-          description: `Order #${String(selected.id).slice(0, 8)}`,
+          description: `Table #${tableId} - ${orderIds.length} order(s)`,
           order_id: razorpayOrder.id,
           method: {
             netbanking: true,
@@ -398,33 +461,42 @@ const useTerminal = () => {
         instance.open();
       });
 
+      await Promise.all(orderIds.map((orderId) => updateOrderStatus(orderId, "paid")));
+
       if (isValidEmail(receiptEmail)) {
         try {
-          await sendOrderReceipt({
-            orderId: selected.id,
+          await sendCombinedOrderReceipt({
+            orderIds,
             userEmail: String(receiptEmail).trim(),
           });
-          toast.success("Payment successful and receipt sent");
+          toast.success("All orders paid and combined receipt sent");
         } catch (mailError) {
           console.warn("Receipt email failed:", mailError);
-          toast.warning("Payment done, but receipt email failed");
+          toast.warning("All orders paid, but combined receipt email failed");
         }
       } else {
-        toast.success("Payment successful");
+        toast.success("All table orders paid successfully");
       }
 
-      console.log("[payByNetbankingForTableOrder] Payment completed, updating order status");
       setOrders((prev) => prev.map((item) => (
-        item.id === selected.id ? { ...item, status: "paid" } : item
+        orderIds.includes(item.id) ? { ...item, status: "paid" } : item
       )));
 
-      const remainingUnpaid = list.filter((item) => item.id !== selected.id).length;
-      if (remainingUnpaid === 0) {
+      try {
+        const released = await releaseTable(tableId);
+        setTables((prev) => prev.map((table) => (table.id === tableId ? released : table)));
+      } catch {
         setTables((prev) => prev.map((table) => {
           if (table.id !== tableId) return table;
           return { ...table, status: "available" };
         }));
       }
+
+      setSelectedUnpaidOrderByTable((prev) => {
+        const next = { ...prev };
+        delete next[tableId];
+        return next;
+      });
     } catch (requestError) {
       console.error("[payByNetbankingForTableOrder] Error:", requestError);
       const message = getErrorMessage(requestError, "Could not complete netbanking payment");
@@ -434,7 +506,7 @@ const useTerminal = () => {
       paymentInFlight.current.delete(tableId);
       setActionTableId(null);
     }
-  }, [loadRazorpayScript, unpaidOrdersByTable, selectedUnpaidOrderByTable]);
+  }, [loadRazorpayScript, unpaidOrdersByTable]);
 
   const releaseTableSafely = useCallback(async (tableId) => {
     setActionTableId(tableId);
@@ -473,6 +545,7 @@ const useTerminal = () => {
     payByCashForTableOrder,
     payByNetbankingForTableOrder,
     getSelectedUnpaidOrderAmount,
+    prefetchTaxIncludedAmountForTable,
     releaseTableSafely,
     refresh: loadTerminalData,
   };

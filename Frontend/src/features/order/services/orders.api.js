@@ -55,3 +55,12 @@ export async function sendOrderReceipt(data) {
     throw normalizeError(error);
   }
 }
+
+export async function sendCombinedOrderReceipt(data) {
+  try {
+    const response = await api.post("/sendCombinedReceipt", data);
+    return response.data;
+  } catch (error) {
+    throw normalizeError(error);
+  }
+}
