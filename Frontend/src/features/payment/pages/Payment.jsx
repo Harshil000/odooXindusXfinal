@@ -1,4 +1,4 @@
-import "../styles/payment.scss";
+  import "../styles/payment.scss";
 import usePayment from "../hook/usePayment";
 
 const formatDate = (value) => {

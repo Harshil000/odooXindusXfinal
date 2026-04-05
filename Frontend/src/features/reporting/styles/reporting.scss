@@ -24,7 +24,6 @@
 .reporting-hero,
 .reporting-filter-card,
 .metric-card,
-.status-pill-card,
 .dashboard-card {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -164,32 +163,6 @@
 .metric-card small {
   color: var(--accent);
   font-size: 0.85rem;
-}
-
-.secondary-metrics {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-
-.status-pill-card {
-  padding: 0.9rem 1rem;
-  display: grid;
-  gap: 0.25rem;
-}
-
-.status-pill-card span {
-  color: var(--text-secondary);
-  font-size: 0.82rem;
-}
-
-.status-pill-card strong {
-  font-size: 1.35rem;
-  color: var(--text-primary);
-}
-
-.status-pill-card.accent {
-  background: linear-gradient(135deg, rgba(139, 111, 78, 0.1), rgba(46, 125, 107, 0.08));
 }
 
 .dashboard-grid {
@@ -457,10 +430,6 @@
 
 @media (max-width: 1180px) {
   .metric-grid,
-  .secondary-metrics {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
   .dashboard-grid,
   .bottom-grid,
   .pie-layout {
@@ -496,7 +465,8 @@
   }
 
   .metric-grid,
-  .secondary-metrics {
+  .dashboard-grid,
+  .bottom-grid {
     grid-template-columns: 1fr 1fr;
   }
 
@@ -515,7 +485,8 @@
 
 @media (max-width: 560px) {
   .metric-grid,
-  .secondary-metrics {
+  .dashboard-grid,
+  .bottom-grid {
     grid-template-columns: 1fr;
   }
 }

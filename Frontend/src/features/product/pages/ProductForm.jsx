@@ -4,6 +4,21 @@ import useProducts from "../hook/useProducts";
 
 const VARIANT_UNITS = ["K.G", "Unit", "Liter"];
 
+const normalizeVariants = (variants) => {
+  if (Array.isArray(variants)) return variants;
+
+  if (typeof variants === "string") {
+    try {
+      const parsed = JSON.parse(variants);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  return [];
+};
+
 const ProductForm = () => {
   const {
     categories,
@@ -24,7 +39,7 @@ const ProductForm = () => {
     price: initialProduct?.price || "",
     tax_percent: initialProduct?.tax_percent || 0,
     is_active: initialProduct?.is_active ?? true,
-    variants: initialProduct?.variants || [],
+    variants: normalizeVariants(initialProduct?.variants),
   }));
 
   const isEditMode = Boolean(initialProduct);
@@ -39,7 +54,7 @@ const ProductForm = () => {
 
   const handleVariantChange = (index, field, value) => {
     setFormState((prev) => {
-      const variants = [...prev.variants];
+      const variants = [...normalizeVariants(prev.variants)];
       variants[index] = {
         ...variants[index],
         [field]: field === "extra_price" ? Number(value) : value,
@@ -55,7 +70,7 @@ const ProductForm = () => {
     setFormState((prev) => ({
       ...prev,
       variants: [
-        ...prev.variants,
+        ...normalizeVariants(prev.variants),
         { attribute: "", value: "", unit: "Unit", extra_price: 0 },
       ],
     }));
@@ -64,7 +79,7 @@ const ProductForm = () => {
   const removeVariantRow = (index) => {
     setFormState((prev) => ({
       ...prev,
-      variants: prev.variants.filter((_, rowIndex) => rowIndex !== index),
+      variants: normalizeVariants(prev.variants).filter((_, rowIndex) => rowIndex !== index),
     }));
   };
 
@@ -78,7 +93,7 @@ const ProductForm = () => {
       price: Number(formState.price),
       tax_percent: Number(formState.tax_percent),
       is_active: formState.is_active,
-      variants: formState.variants.map((variant) => ({
+      variants: normalizeVariants(formState.variants).map((variant) => ({
         attribute: variant.attribute?.trim() || "",
         value: variant.value?.trim() || "",
         unit: variant.unit || "Unit",
@@ -201,10 +216,10 @@ const ProductForm = () => {
               <div className="variant-label">Extra Prices</div>
               <div className="variant-label">Actions</div>
             </div>
-            {formState.variants.length === 0 ? (
+            {normalizeVariants(formState.variants).length === 0 ? (
               <p className="empty-state">No variants yet. Add a variant row.</p>
             ) : (
-              formState.variants.map((variant, index) => (
+              normalizeVariants(formState.variants).map((variant, index) => (
                 <div className="variant-row" key={`variant-${index}`}>
                   <input
                     value={variant.attribute}

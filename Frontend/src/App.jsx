@@ -118,16 +118,6 @@ function App() {
     [data.categories],
   );
 
-  const statusCards = useMemo(
-    () => [
-      { label: "Paid", value: data.metrics.paidOrdersCount },
-      { label: "Completed", value: data.metrics.completedOrders },
-      { label: "Preparing", value: data.metrics.preparingOrders },
-      { label: "To cook", value: data.metrics.toCookOrders },
-    ],
-    [data.metrics],
-  );
-
   const revenueValues = useMemo(
     () => data.dailyRevenue.map((point) => Number(point.revenue) || 0),
     [data.dailyRevenue],
@@ -218,23 +208,6 @@ function App() {
               <MetricCard label="Items Sold" value={formatInteger(data.metrics.itemsSold)} subtext="All sold quantities" />
               <MetricCard label="Products" value={formatInteger(data.metrics.totalProducts)} subtext={`${formatInteger(data.metrics.activeProducts)} active` } />
               <MetricCard label="Categories" value={formatInteger(data.metrics.totalCategories)} subtext="Menu groups" />
-            </section>
-
-            <section className="secondary-metrics">
-              {statusCards.map((card) => (
-                <article key={card.label} className="status-pill-card">
-                  <span>{card.label}</span>
-                  <strong>{formatInteger(card.value)}</strong>
-                </article>
-              ))}
-              <article className="status-pill-card accent">
-                <span>Open Orders</span>
-                <strong>{formatInteger(data.metrics.openOrders)}</strong>
-              </article>
-              <article className="status-pill-card accent">
-                <span>Inactive Products</span>
-                <strong>{formatInteger(data.metrics.inactiveProducts)}</strong>
-              </article>
             </section>
 
             <section className="dashboard-grid">
