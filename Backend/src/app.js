@@ -19,11 +19,11 @@ import paymentRoute from "./payment/payment.route.js";
 import dashboardRoute from "./routes/dashboard.route.js";
 import { handleError } from "./middleware/error.middleware.js";
 
+const app = express();
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const frontendDistPath = path.resolve(__dirname, "../../Frontend/dist");
-
-const app = express('../Frontend/dist');
+const frontendDistPath = path.resolve(__dirname, "../Public");
 
 const configuredOrigins = String(process.env.CORS_ORIGINS || "")
   .split(",")

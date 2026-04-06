@@ -10,6 +10,11 @@ import {
 
 const KITCHEN_STATUSES = ["to_cook", "preparing", "completed"];
 
+function getOrderId(order) {
+  if (!order || typeof order !== "object") return null;
+  return order.id || order.order_id || order.orderId || null;
+}
+
 export async function createOrder(req, res, next) {
   try {
     const { table_id, session_id } = req.body;
@@ -221,7 +226,11 @@ export async function sendCombinedReceipt(req, res, next) {
 
     const orderItemsMap = {};
     for (const order of orders) {
-      orderItemsMap[order.id] = await itemRepo.getItemsByOrder(order.id);
+      const normalizedOrderId = getOrderId(order);
+      if (!normalizedOrderId) {
+        return res.status(500).json({ message: "Order ID missing for one or more selected orders" });
+      }
+      orderItemsMap[normalizedOrderId] = await itemRepo.getItemsByOrder(normalizedOrderId);
     }
 
     const restaurant = await repo.getRestaurantById(restaurant_id);

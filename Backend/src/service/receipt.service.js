@@ -10,7 +10,13 @@ function toMoney(value) {
   return Number(value || 0);
 }
 
+function getOrderId(source) {
+  if (!source || typeof source !== "object") return null;
+  return source.id || source.order_id || source.orderId || null;
+}
+
 export function buildReceiptWithItemTax({ order, restaurantName, items, itemTaxes }) {
+  const normalizedOrderId = getOrderId(order);
   const taxMap = new Map();
   if (Array.isArray(itemTaxes)) {
     for (const entry of itemTaxes) {
@@ -55,7 +61,7 @@ export function buildReceiptWithItemTax({ order, restaurantName, items, itemTaxe
 
   return {
     restaurantName: restaurantName || "Restaurant",
-    orderId: order.id,
+    orderId: normalizedOrderId,
     status: order.status,
     tableNumber: order.table_number,
     itemCount,
@@ -82,7 +88,8 @@ export function buildCombinedReceiptWithItemTax({ orders, restaurantName, orderI
   const normalizedItems = [];
 
   for (const order of orders) {
-    const items = orderItemsMap?.[order.id] || [];
+    const orderId = getOrderId(order);
+    const items = orderItemsMap?.[orderId] || [];
     for (const item of items) {
       const quantity = Number(item.quantity || 0);
       const price = toMoney(item.price);
@@ -99,7 +106,7 @@ export function buildCombinedReceiptWithItemTax({ orders, restaurantName, orderI
 
       normalizedItems.push({
         id: item.id,
-        orderId: order.id,
+        orderId,
         productName: item.product_name || "Unnamed Item",
         quantity,
         price,
@@ -118,7 +125,7 @@ export function buildCombinedReceiptWithItemTax({ orders, restaurantName, orderI
 
   return {
     restaurantName: restaurantName || "Restaurant",
-    orderIds: orders.map((order) => order.id),
+    orderIds: orders.map((order) => getOrderId(order)).filter(Boolean),
     status: "paid",
     tableNumber: orders[0]?.table_number || null,
     itemCount,
