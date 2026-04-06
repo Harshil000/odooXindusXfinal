@@ -1,12 +1,12 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:3000/api/products",
+  baseURL: "/api/products",
   withCredentials: true,
 });
 
 const categoryApi = axios.create({
-  baseURL: "http://localhost:3000/api/categories",
+  baseURL: "/api/categories",
   withCredentials: true,
 });
 

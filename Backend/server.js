@@ -3,13 +3,15 @@ import connectDB from "./src/config/database.js";
 import { createServer } from "http";
 import { initializeSocket } from "./src/socket/socket.js";
 
+const PORT = Number(process.env.PORT || 3000);
+
 try {
     await connectDB();
     const httpServer = createServer(app);
     initializeSocket(httpServer);
 
-    httpServer.listen(3000, () => {
-        console.log("server is running on port 3000");
+    httpServer.listen(PORT, () => {
+        console.log(`server is running on port ${PORT}`);
     });
 } catch (err) {
     console.error(`Due to error: ${err.message}`);

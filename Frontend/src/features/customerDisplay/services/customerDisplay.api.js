@@ -1,12 +1,12 @@
 import axios from "axios";
 
 const tableApi = axios.create({
-  baseURL: "http://localhost:3000/api/tables",
+  baseURL: "/api/tables",
   withCredentials: true,
 });
 
 const displayApi = axios.create({
-  baseURL: "http://localhost:3000/api/customer-display",
+  baseURL: "/api/customer-display",
   withCredentials: true,
 });
 

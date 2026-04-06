@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import sessionRoute from "./routes/session.route.js";
@@ -22,6 +23,7 @@ import { handleError } from "./middleware/error.middleware.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const frontendDistPath = path.resolve(__dirname, "../../Frontend/dist");
+const hasFrontendBuild = fs.existsSync(frontendDistPath);
 
 const app = express();
 
@@ -32,6 +34,7 @@ const configuredOrigins = String(process.env.CORS_ORIGINS || "")
 
 const isAllowedOrigin = (origin) => {
   if (!origin) return true;
+  if (configuredOrigins.length === 0) return true;
   if (configuredOrigins.includes(origin)) return true;
   if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)) return true;
   if (/^https?:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+)(:\d+)?$/i.test(origin)) return true;
@@ -52,7 +55,7 @@ app.use(
 // =========================
 // HEALTH CHECK
 // =========================
-app.get("/", (req, res) => {
+app.get("/api/health", (req, res) => {
   res.send("🚀 POS Backend Running");
 });
 
@@ -103,10 +106,18 @@ app.use("/api/payments", paymentRoute);
 app.use("/api/dashboard", dashboardRoute);
 
 // Serve the built frontend from backend for single-host deployment.
-app.use(express.static(frontendDistPath));
-app.get(/^\/(?!api).*/, (req, res) => {
-  res.sendFile(path.join(frontendDistPath, "index.html"));
-});
+if (hasFrontendBuild) {
+  app.use(express.static(frontendDistPath));
+  app.get(/^\/(?!api).*/, (req, res) => {
+    res.sendFile(path.join(frontendDistPath, "index.html"));
+  });
+} else {
+  app.get("/", (req, res) => {
+    res.status(503).json({
+      message: "Frontend build not found. Build Frontend/dist during deployment.",
+    });
+  });
+}
 // =========================
 // 404 HANDLER
 // =========================

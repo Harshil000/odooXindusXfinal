@@ -7,8 +7,7 @@ const resolveSocketUrl = () => {
   if (configured) return configured;
 
   if (typeof window !== "undefined") {
-    const protocol = window.location.protocol === "https:" ? "https:" : "http:";
-    return `${protocol}//${window.location.hostname}:3000`;
+    return window.location.origin;
   }
 
   return "http://localhost:3000";
