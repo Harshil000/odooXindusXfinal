@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import path from "path";
+import { fileURLToPath } from "url";
 import sessionRoute from "./routes/session.route.js";
 import orderRoute from "./routes/order.route.js";
 import orderItemRoute from "./routes/orderItem.route.js";
@@ -16,6 +18,10 @@ import publicRoute from "./routes/public.route.js";
 import paymentRoute from "./payment/payment.route.js";
 import dashboardRoute from "./routes/dashboard.route.js";
 import { handleError } from "./middleware/error.middleware.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const frontendDistPath = path.resolve(__dirname, "../../Frontend/dist");
 
 const app = express();
 
@@ -95,6 +101,12 @@ app.use("/api/payments", paymentRoute);
 
 // Dashboard analytics
 app.use("/api/dashboard", dashboardRoute);
+
+// Serve the built frontend from backend for single-host deployment.
+app.use(express.static(frontendDistPath));
+app.get(/^\/(?!api).*/, (req, res) => {
+  res.sendFile(path.join(frontendDistPath, "index.html"));
+});
 // =========================
 // 404 HANDLER
 // =========================
