@@ -1,9 +1,7 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
 import sessionRoute from "./routes/session.route.js";
 import orderRoute from "./routes/order.route.js";
 import orderItemRoute from "./routes/orderItem.route.js";
@@ -20,18 +18,7 @@ import paymentRoute from "./payment/payment.route.js";
 import dashboardRoute from "./routes/dashboard.route.js";
 import { handleError } from "./middleware/error.middleware.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const frontendDistCandidates = [
-  path.resolve(__dirname, "../../Frontend/dist"),
-  path.resolve(__dirname, "../../frontend/dist"),
-  path.resolve(__dirname, "../Frontend/dist"),
-  path.resolve(__dirname, "../frontend/dist"),
-];
-const frontendDistPath = frontendDistCandidates.find((candidate) => fs.existsSync(candidate));
-const hasFrontendBuild = Boolean(frontendDistPath);
-
-const app = express();
+const app = express('../Frontend/dist');
 
 const configuredOrigins = String(process.env.CORS_ORIGINS || "")
   .split(",")
@@ -47,6 +34,7 @@ const isAllowedOrigin = (origin) => {
   return false;
 };
 
+app.use(express.static('../Frontend/dist'));
 app.use(express.json());
 app.use(cookieParser());
 app.use(
@@ -111,19 +99,10 @@ app.use("/api/payments", paymentRoute);
 // Dashboard analytics
 app.use("/api/dashboard", dashboardRoute);
 
-// Serve the built frontend from backend for single-host deployment.
-if (hasFrontendBuild) {
-  app.use(express.static(frontendDistPath));
-  app.get(/^\/(?!api).*/, (req, res) => {
-    res.sendFile(path.join(frontendDistPath, "index.html"));
-  });
-} else {
-  app.get("/", (req, res) => {
-    res.status(503).json({
-      message: "Frontend build not found. Build Frontend/dist during deployment.",
-    });
-  });
-}
+app.use('*name', (req, res) => {
+  res.sendFile(path.join(__dirname, './index.html'))
+})
+
 // =========================
 // 404 HANDLER
 // =========================
