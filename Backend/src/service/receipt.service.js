@@ -131,7 +131,8 @@ export function buildCombinedReceiptWithItemTax({ orders, restaurantName, orderI
 }
 
 export function createReceiptHtml(receipt) {
-  const hasMultipleOrders = Array.isArray(receipt.orderIds) && receipt.orderIds.length > 1;
+  const isCombinedReceipt = Array.isArray(receipt.orderIds);
+  const hasMultipleOrders = isCombinedReceipt && receipt.orderIds.length > 1;
   const itemsHtml = receipt.items.length
     ? receipt.items
       .map(
@@ -155,15 +156,15 @@ export function createReceiptHtml(receipt) {
       </tr>
     `;
 
-  const orderReference = hasMultipleOrders
+  const orderReference = isCombinedReceipt
     ? receipt.orderIds.map((orderId) => `#${String(orderId).slice(0, 8)}`).join(", ")
-    : receipt.orderId;
+    : receipt.orderId || "N/A";
 
   return `
     <div style="font-family:Arial,sans-serif;max-width:840px;margin:0 auto;">
       <h2 style="margin:0 0 8px;">${receipt.restaurantName}</h2>
-      <p style="margin:0 0 16px;color:#555;">${hasMultipleOrders ? "Combined Table Bill" : "Order Bill"}</p>
-      <p><strong>${hasMultipleOrders ? "Order IDs" : "Order ID"}:</strong> ${orderReference}</p>
+      <p style="margin:0 0 16px;color:#555;">${isCombinedReceipt ? "Combined Table Bill" : "Order Bill"}</p>
+      <p><strong>${isCombinedReceipt ? (hasMultipleOrders ? "Order IDs" : "Order ID") : "Order ID"}:</strong> ${orderReference}</p>
       <p><strong>Table:</strong> ${receipt.tableNumber || "N/A"}</p>
       <p><strong>Status:</strong> ${receipt.status}</p>
       <p><strong>Generated At:</strong> ${receipt.generatedAt}</p>

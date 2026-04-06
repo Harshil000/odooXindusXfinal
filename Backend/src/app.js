@@ -22,8 +22,14 @@ import { handleError } from "./middleware/error.middleware.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const frontendDistPath = path.resolve(__dirname, "../../Frontend/dist");
-const hasFrontendBuild = fs.existsSync(frontendDistPath);
+const frontendDistCandidates = [
+  path.resolve(__dirname, "../../Frontend/dist"),
+  path.resolve(__dirname, "../../frontend/dist"),
+  path.resolve(__dirname, "../Frontend/dist"),
+  path.resolve(__dirname, "../frontend/dist"),
+];
+const frontendDistPath = frontendDistCandidates.find((candidate) => fs.existsSync(candidate));
+const hasFrontendBuild = Boolean(frontendDistPath);
 
 const app = express();
 
